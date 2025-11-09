@@ -11,9 +11,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import { doctorService } from '../services/api';
-import { useNotification } from '../contexts/NotificationContext';
-import { getErrorMessage } from '../services/api';
+import { doctorService, getErrorMessage } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
 import type { Doctor } from '../types';
 import { Gender, DutyStatus } from '../types';

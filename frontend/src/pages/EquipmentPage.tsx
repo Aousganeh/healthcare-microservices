@@ -11,9 +11,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import { equipmentService } from '../services/api';
-import { useNotification } from '../contexts/NotificationContext';
-import { getErrorMessage } from '../services/api';
+import { equipmentService, getErrorMessage } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
 import type { Equipment } from '../types';
 import { EquipmentStatus } from '../types';

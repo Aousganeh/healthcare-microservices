@@ -11,9 +11,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import { appointmentService } from '../services/api';
-import { useNotification } from '../contexts/NotificationContext';
-import { getErrorMessage } from '../services/api';
+import { appointmentService, getErrorMessage } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
 import type { Appointment } from '../types';
 import { AppointmentStatus } from '../types';

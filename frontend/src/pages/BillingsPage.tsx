@@ -11,9 +11,7 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import { billingService } from '../services/api';
-import { useNotification } from '../contexts/NotificationContext';
-import { getErrorMessage } from '../services/api';
+import { billingService, getErrorMessage } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
 import type { Billing } from '../types';
 import { PaymentStatus, PaymentMethod, CurrencyCode } from '../types';
