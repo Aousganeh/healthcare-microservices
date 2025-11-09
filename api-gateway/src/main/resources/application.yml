@@ -68,7 +68,7 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
-            allowCredentials: true
+            allowCredentials: false
 
 eureka:
   client:
