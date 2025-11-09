@@ -56,13 +56,15 @@ export enum CurrencyCode {
 }
 
 export enum RoomType {
-  SINGLE = 'SINGLE',
-  DOUBLE = 'DOUBLE',
-  TRIPLE = 'TRIPLE',
+  PATIENT_ROOM = 'PATIENT_ROOM',
   ICU = 'ICU',
   OPERATION_ROOM = 'OPERATION_ROOM',
   EMERGENCY = 'EMERGENCY',
-  WARD = 'WARD'
+  WARD = 'WARD',
+  PRIVATE = 'PRIVATE',
+  SEMI_PRIVATE = 'SEMI_PRIVATE',
+  EXAMINATION_ROOM = 'EXAMINATION_ROOM',
+  RECOVERY_ROOM = 'RECOVERY_ROOM'
 }
 
 export enum EquipmentStatus {

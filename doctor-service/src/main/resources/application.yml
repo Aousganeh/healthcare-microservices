@@ -26,3 +26,13 @@ logging:
   level:
     com.healthcare: DEBUG
 
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

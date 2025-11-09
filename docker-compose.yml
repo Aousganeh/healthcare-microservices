@@ -353,6 +353,51 @@ services:
     networks:
       - healthcare-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: healthcare-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - service-discovery
+      - api-gateway
+      - patient-service
+      - doctor-service
+      - appointment-service
+      - billing-service
+      - room-service
+      - equipment-service
+      - identity-service
+      - notification-service
+    networks:
+      - healthcare-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: healthcare-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - healthcare-network
+
 volumes:
   postgres_identity_data:
   postgres_patient_data:
@@ -361,6 +406,8 @@ volumes:
   postgres_billing_data:
   postgres_room_data:
   postgres_equipment_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   healthcare-network:
