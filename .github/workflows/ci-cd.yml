@@ -11,43 +11,192 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  build-and-push:
+  detect-changes:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    strategy:
-      matrix:
-        service:
-          - service-discovery
-          - config-server
-          - api-gateway
-          - identity-service
-          - patient-service
-          - doctor-service
-          - appointment-service
-          - billing-service
-          - room-service
-          - equipment-service
-          - notification-service
-
+    outputs:
+      service-discovery: ${{ steps.filter.outputs.service-discovery }}
+      config-server: ${{ steps.filter.outputs.config-server }}
+      api-gateway: ${{ steps.filter.outputs.api-gateway }}
+      identity-service: ${{ steps.filter.outputs.identity-service }}
+      patient-service: ${{ steps.filter.outputs.patient-service }}
+      doctor-service: ${{ steps.filter.outputs.doctor-service }}
+      appointment-service: ${{ steps.filter.outputs.appointment-service }}
+      billing-service: ${{ steps.filter.outputs.billing-service }}
+      room-service: ${{ steps.filter.outputs.room-service }}
+      equipment-service: ${{ steps.filter.outputs.equipment-service }}
+      notification-service: ${{ steps.filter.outputs.notification-service }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      root: ${{ steps.filter.outputs.root }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            service-discovery:
+              - 'service-discovery/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            config-server:
+              - 'config-server/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            api-gateway:
+              - 'api-gateway/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            identity-service:
+              - 'identity-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            patient-service:
+              - 'patient-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            doctor-service:
+              - 'doctor-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            appointment-service:
+              - 'appointment-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            billing-service:
+              - 'billing-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            room-service:
+              - 'room-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            equipment-service:
+              - 'equipment-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            notification-service:
+              - 'notification-service/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+            frontend:
+              - 'frontend/**'
+            root:
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
+              - '.github/workflows/**'
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - service: service-discovery
+          - service: config-server
+          - service: api-gateway
+          - service: identity-service
+          - service: patient-service
+          - service: doctor-service
+          - service: appointment-service
+          - service: billing-service
+          - service: room-service
+          - service: equipment-service
+          - service: notification-service
+          - service: frontend
+    steps:
+      - name: Check if service changed
+        id: check
+        run: |
+          if [ "${{ matrix.service }}" == "service-discovery" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.service-discovery }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "config-server" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.config-server }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "api-gateway" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.api-gateway }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "identity-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.identity-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "patient-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.patient-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "doctor-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.doctor-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "appointment-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.appointment-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "billing-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.billing-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "room-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.room-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "equipment-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.equipment-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "notification-service" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.notification-service }}"
+            ROOT="${{ needs.detect-changes.outputs.root }}"
+          elif [ "${{ matrix.service }}" == "frontend" ]; then
+            CHANGED="${{ needs.detect-changes.outputs.frontend }}"
+            ROOT="false"
+          fi
+          
+          if [ "$CHANGED" == "true" ] || [ "$ROOT" == "true" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✅ ${{ matrix.service }} has changes, will build"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "⏭️  ${{ matrix.service }} has no changes, skipping build"
+          fi
+
+      - name: Checkout code
+        if: steps.check.outputs.should_build == 'true'
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
+        if: steps.check.outputs.should_build == 'true' && matrix.service != 'frontend'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Set up Node.js
+        if: steps.check.outputs.should_build == 'true' && matrix.service == 'frontend'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Set up Docker Buildx
+        if: steps.check.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v3
         with:
           platforms: linux/amd64,linux/arm64
 
       - name: Log in to Container Registry
+        if: steps.check.outputs.should_build == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -55,6 +204,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
+        if: steps.check.outputs.should_build == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -67,9 +217,10 @@ jobs:
             lower(repo)
 
       - name: Build and push Docker image
+        if: steps.check.outputs.should_build == 'true'
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ${{ matrix.service == 'frontend' && './frontend' || '.' }}
           file: ./${{ matrix.service }}/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
@@ -81,11 +232,13 @@ jobs:
             GRADLE_OPTS=-Xmx512m -XX:MaxMetaspaceSize=256m
 
   build-status:
-    needs: build-and-push
+    needs: [detect-changes, build-and-push]
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Build Status
         run: |
-          echo "✅ All services built and pushed successfully!"
+          echo "✅ CI/CD Pipeline completed!"
+          echo "Only changed services were built and pushed."
           echo "Images available at: ghcr.io/${{ github.repository }}"
 
