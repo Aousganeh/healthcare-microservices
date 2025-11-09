@@ -205,7 +205,8 @@ export default function RoomSelectionModal({
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
       </DialogActions>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }
 
