@@ -9,24 +9,25 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { appointmentService } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Appointment } from '../types';
 import { AppointmentStatus } from '../types';
 import DataTable from '../components/DataTable';
 import { format } from 'date-fns';
 
 export default function AppointmentsPage() {
+  const { showError, showSuccess } = useNotification();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [formData, setFormData] = useState<Partial<Appointment>>({});
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+    useEffect(() => {
     loadAppointments();
   }, []);
 
@@ -35,8 +36,8 @@ export default function AppointmentsPage() {
       setLoading(true);
       const response = await appointmentService.getAll();
       setAppointments(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load appointments');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -60,21 +61,21 @@ export default function AppointmentsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
-  };
+      };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
-      if (editing?.id) {
+            if (editing?.id) {
         await appointmentService.update(editing.id, formData as Appointment);
+        showSuccess('await appointmentService.update(editing.id, formData as Appointment); update successfully');
       } else {
         await appointmentService.create(formData as Appointment);
+        showSuccess('await appointmentService.create(formData as Appointment); create successfully');
       }
       handleClose();
       loadAppointments();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -85,8 +86,8 @@ export default function AppointmentsPage() {
     try {
       await appointmentService.delete(appointment.id);
       loadAppointments();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -122,11 +123,7 @@ export default function AppointmentsPage() {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      
 
       <DataTable
         columns={columns}

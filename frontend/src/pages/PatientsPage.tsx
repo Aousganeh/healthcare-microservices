@@ -9,22 +9,22 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
-import { patientService } from '../services/api';
+import { patientService, getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Patient } from '../types';
 import { Gender, BloodGroup } from '../types';
 import DataTable from '../components/DataTable';
 import { format } from 'date-fns';
 
 export default function PatientsPage() {
+  const { showError, showSuccess } = useNotification();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [formData, setFormData] = useState<Partial<Patient>>({});
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function PatientsPage() {
       setLoading(true);
       const response = await patientService.getAll();
       setPatients(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load patients');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,8 @@ export default function PatientsPage() {
       setLoading(true);
       const response = await patientService.search(searchQuery);
       setPatients(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Search failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -74,21 +74,21 @@ export default function PatientsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
   };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
       if (editing?.id) {
         await patientService.update(editing.id, formData as Patient);
+        showSuccess('Patient updated successfully');
       } else {
         await patientService.create(formData as Patient);
+        showSuccess('Patient created successfully');
       }
       handleClose();
       loadPatients();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -98,9 +98,10 @@ export default function PatientsPage() {
     }
     try {
       await patientService.delete(patient.id);
+      showSuccess('Patient deleted successfully');
       loadPatients();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -150,12 +151,6 @@ export default function PatientsPage() {
           Search
         </Button>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
 
       <DataTable
         columns={columns}

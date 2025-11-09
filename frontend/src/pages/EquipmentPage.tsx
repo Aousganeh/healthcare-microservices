@@ -9,24 +9,25 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { equipmentService } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Equipment } from '../types';
 import { EquipmentStatus } from '../types';
 import DataTable from '../components/DataTable';
 import { format } from 'date-fns';
 
 export default function EquipmentPage() {
+  const { showError, showSuccess } = useNotification();
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Equipment | null>(null);
   const [formData, setFormData] = useState<Partial<Equipment>>({});
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+    useEffect(() => {
     loadEquipment();
   }, []);
 
@@ -35,8 +36,8 @@ export default function EquipmentPage() {
       setLoading(true);
       const response = await equipmentService.getAll();
       setEquipment(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load equipment');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -62,21 +63,21 @@ export default function EquipmentPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
-  };
+      };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
-      if (editing?.id) {
+            if (editing?.id) {
         await equipmentService.update(editing.id, formData as Equipment);
+        showSuccess('await equipmentService.update(editing.id, formData as Equipment); update successfully');
       } else {
         await equipmentService.create(formData as Equipment);
+        showSuccess('await equipmentService.create(formData as Equipment); create successfully');
       }
       handleClose();
       loadEquipment();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -87,8 +88,8 @@ export default function EquipmentPage() {
     try {
       await equipmentService.delete(item.id);
       loadEquipment();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -125,11 +126,7 @@ export default function EquipmentPage() {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      
 
       <DataTable
         columns={columns}

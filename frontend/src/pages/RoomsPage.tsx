@@ -9,23 +9,24 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { roomService } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Room } from '../types';
 import { RoomType } from '../types';
 import DataTable from '../components/DataTable';
 
 export default function RoomsPage() {
+  const { showError, showSuccess } = useNotification();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [formData, setFormData] = useState<Partial<Room>>({});
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+    useEffect(() => {
     loadRooms();
   }, []);
 
@@ -34,8 +35,8 @@ export default function RoomsPage() {
       setLoading(true);
       const response = await roomService.getAll();
       setRooms(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load rooms');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -56,21 +57,21 @@ export default function RoomsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
-  };
+      };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
-      if (editing?.id) {
+            if (editing?.id) {
         await roomService.update(editing.id, formData as Room);
+        showSuccess('await roomService.update(editing.id, formData as Room); update successfully');
       } else {
         await roomService.create(formData as Room);
+        showSuccess('await roomService.create(formData as Room); create successfully');
       }
       handleClose();
       loadRooms();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -81,8 +82,8 @@ export default function RoomsPage() {
     try {
       await roomService.delete(room.id);
       loadRooms();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -114,11 +115,7 @@ export default function RoomsPage() {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      
 
       <DataTable
         columns={columns}

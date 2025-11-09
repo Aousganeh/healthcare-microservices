@@ -9,22 +9,24 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { doctorService } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Doctor } from '../types';
 import { Gender, DutyStatus } from '../types';
 import DataTable from '../components/DataTable';
 
 export default function DoctorsPage() {
+  const { showError, showSuccess } = useNotification();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Doctor | null>(null);
   const [formData, setFormData] = useState<Partial<Doctor>>({});
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadDoctors();
@@ -35,8 +37,8 @@ export default function DoctorsPage() {
       setLoading(true);
       const response = await doctorService.getAll();
       setDoctors(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load doctors');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -51,8 +53,8 @@ export default function DoctorsPage() {
       setLoading(true);
       const response = await doctorService.search(searchQuery);
       setDoctors(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Search failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -73,21 +75,21 @@ export default function DoctorsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
-  };
+      };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
-      if (editing?.id) {
+            if (editing?.id) {
         await doctorService.update(editing.id, formData as Doctor);
+        showSuccess('await doctorService.update(editing.id, formData as Doctor); update successfully');
       } else {
         await doctorService.create(formData as Doctor);
+        showSuccess('await doctorService.create(formData as Doctor); create successfully');
       }
       handleClose();
       loadDoctors();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -98,8 +100,8 @@ export default function DoctorsPage() {
     try {
       await doctorService.delete(doctor.id);
       loadDoctors();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -145,11 +147,7 @@ export default function DoctorsPage() {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      
 
       <DataTable
         columns={columns}

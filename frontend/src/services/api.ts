@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { Patient, Doctor, Appointment, AppointmentDetail, Billing, Room, Equipment } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -9,6 +9,22 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export const getErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+    if (axiosError.response?.data) {
+      const data = axiosError.response.data;
+      if (data.message) return data.message;
+      if (data.error) return data.error;
+      if (typeof data === 'string') return data;
+    }
+    if (axiosError.message) return axiosError.message;
+    return `Request failed: ${axiosError.response?.status || 'Unknown error'}`;
+  }
+  if (error instanceof Error) return error.message;
+  return 'An unexpected error occurred';
+};
 
 export const patientService = {
   getAll: () => api.get<Patient[]>('/patients'),

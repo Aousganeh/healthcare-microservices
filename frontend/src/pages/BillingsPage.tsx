@@ -9,24 +9,25 @@ import {
   TextField,
   Typography,
   MenuItem,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import { billingService } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
+import { getErrorMessage } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import type { Billing } from '../types';
 import { PaymentStatus, PaymentMethod, CurrencyCode } from '../types';
 import DataTable from '../components/DataTable';
 import { format } from 'date-fns';
 
 export default function BillingsPage() {
+  const { showError, showSuccess } = useNotification();
   const [billings, setBillings] = useState<Billing[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Billing | null>(null);
   const [formData, setFormData] = useState<Partial<Billing>>({});
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+    useEffect(() => {
     loadBillings();
   }, []);
 
@@ -35,8 +36,8 @@ export default function BillingsPage() {
       setLoading(true);
       const response = await billingService.getAll();
       setBillings(response.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load billings');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -62,21 +63,21 @@ export default function BillingsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
-    setError(null);
-  };
+      };
 
   const handleSubmit = async () => {
     try {
-      setError(null);
-      if (editing?.id) {
+            if (editing?.id) {
         await billingService.update(editing.id, formData as Billing);
+        showSuccess('await billingService.update(editing.id, formData as Billing); update successfully');
       } else {
         await billingService.create(formData as Billing);
+        showSuccess('await billingService.create(formData as Billing); create successfully');
       }
       handleClose();
       loadBillings();
-    } catch (err: any) {
-      setError(err.message || 'Operation failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -87,8 +88,8 @@ export default function BillingsPage() {
     try {
       await billingService.delete(billing.id);
       loadBillings();
-    } catch (err: any) {
-      setError(err.message || 'Delete failed');
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
     }
   };
 
@@ -125,11 +126,7 @@ export default function BillingsPage() {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+      
 
       <DataTable
         columns={columns}
