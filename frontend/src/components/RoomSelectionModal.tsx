@@ -15,6 +15,7 @@ import {
   CardActionArea,
   Chip,
   CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import { roomService, getErrorMessage } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
@@ -96,17 +97,28 @@ export default function RoomSelectionModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          backdropFilter: 'blur(10px)',
-        },
-      }}
-    >
+    <>
+      <Backdrop
+        open={open}
+        sx={{
+          zIndex: (theme) => theme.zIndex.modal - 1,
+          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+        onClick={handleClose}
+      />
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            position: 'relative',
+            zIndex: (theme) => theme.zIndex.modal,
+          },
+        }}
+      >
       <DialogTitle>Select Room</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
