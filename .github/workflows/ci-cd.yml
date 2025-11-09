@@ -15,31 +15,6 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  check-newer-commit:
-    runs-on: ubuntu-latest
-    outputs:
-      has-newer-commit: ${{ steps.check.outputs.has-newer }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for newer commits
-        id: check
-        run: |
-          CURRENT_SHA="${{ github.sha }}"
-          BRANCH="${{ github.ref_name }}"
-          
-          LATEST_SHA=$(git rev-parse origin/$BRANCH)
-          
-          if [ "$CURRENT_SHA" != "$LATEST_SHA" ]; then
-            echo "has-newer=true" >> $GITHUB_OUTPUT
-            echo "⚠️  Newer commit exists ($LATEST_SHA), will check service changes before building"
-          else
-            echo "has-newer=false" >> $GITHUB_OUTPUT
-            echo "✅ This is the latest commit, will build"
-          fi
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -132,7 +107,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [detect-changes, check-newer-commit]
+    needs: [detect-changes]
     permissions:
       contents: read
       packages: write
@@ -220,30 +195,8 @@ jobs:
             exit 0
           fi
           
-          if [ "${{ needs.check-newer-commit.outputs.has-newer-commit }}" == "true" ]; then
-            LATEST_SHA=$(git rev-parse origin/$BRANCH)
-            
-            if [ "$SERVICE_PATH" != "frontend" ]; then
-              if git diff --quiet $CURRENT_SHA $LATEST_SHA -- "$SERVICE_PATH/**" "build.gradle" "settings.gradle" "gradle/**"; then
-                echo "should_build=false" >> $GITHUB_OUTPUT
-                echo "⏭️  ${{ matrix.service }} changed in this commit but also in newer commit, skipping (newer will build)"
-              else
-                echo "should_build=true" >> $GITHUB_OUTPUT
-                echo "✅ ${{ matrix.service }} changed in this commit, newer commit doesn't have same changes, will build"
-              fi
-            else
-              if git diff --quiet $CURRENT_SHA $LATEST_SHA -- "$SERVICE_PATH/**"; then
-                echo "should_build=false" >> $GITHUB_OUTPUT
-                echo "⏭️  ${{ matrix.service }} changed in this commit but also in newer commit, skipping (newer will build)"
-              else
-                echo "should_build=true" >> $GITHUB_OUTPUT
-                echo "✅ ${{ matrix.service }} changed in this commit, newer commit doesn't have same changes, will build"
-              fi
-            fi
-          else
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "✅ ${{ matrix.service }} has changes and this is latest commit, will build"
-          fi
+          echo "should_build=true" >> $GITHUB_OUTPUT
+          echo "✅ ${{ matrix.service }} has changes, will build"
 
 
       - name: Set up JDK 17
