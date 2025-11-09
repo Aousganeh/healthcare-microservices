@@ -2,6 +2,7 @@ package com.healthcare.room.service;
 
 import com.healthcare.room.dto.RoomDTO;
 import com.healthcare.room.entity.Room;
+import com.healthcare.room.enums.RoomType;
 import com.healthcare.room.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
