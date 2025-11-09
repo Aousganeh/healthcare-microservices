@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 public abstract class BaseAuditableEntity extends BaseEntity {
     @CreatedDate
-    @Column(name = "created_date", nullable = false, updatable = false)
+    @Column(name = "created_date", updatable = false)
     private LocalDateTime createdDate;
 
     @Column(name = "created_by")
