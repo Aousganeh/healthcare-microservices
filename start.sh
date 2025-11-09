@@ -23,6 +23,22 @@ docker-compose -f docker-compose.prod.yml pull
 echo "🚀 Starting containers..."
 docker-compose -f docker-compose.prod.yml up -d
 
+echo "⏳ Waiting for services to be ready..."
+sleep 20
+
+echo "🔍 Checking service discovery..."
+max_attempts=30
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+  if curl -s http://localhost:8761 > /dev/null 2>&1; then
+    echo "✅ Service Discovery is ready"
+    break
+  fi
+  attempt=$((attempt + 1))
+  sleep 2
+done
+
+echo "⏳ Waiting for services to register with Eureka..."
 sleep 15
 
 docker-compose -f docker-compose.prod.yml ps
