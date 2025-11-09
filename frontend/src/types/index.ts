@@ -200,3 +200,32 @@ export interface User {
   roles: string[];
 }
 
+export interface MedicalRecord {
+  id?: number;
+  diagnosis: string;
+  recordDate: string;
+  notes?: string;
+  patientId: number;
+}
+
+export interface MedicalCondition {
+  id?: number;
+  name: string;
+  description?: string;
+  diagnosisDate: string;
+  severity?: string;
+  patientId: number;
+}
+
+export interface Insurance {
+  id?: number;
+  providerName: string;
+  policyNumber: string;
+  coverageStartDate: string;
+  coverageEndDate?: string;
+  coverageDetails?: string;
+  coveragePercentage?: number;
+  patientId: number;
+  isActive?: boolean;
+}
+

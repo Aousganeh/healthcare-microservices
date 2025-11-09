@@ -12,6 +12,9 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import BillingsPage from './pages/BillingsPage';
 import RoomsPage from './pages/RoomsPage';
 import EquipmentPage from './pages/EquipmentPage';
+import MedicalRecordsPage from './pages/MedicalRecordsPage';
+import MedicalConditionsPage from './pages/MedicalConditionsPage';
+import InsurancesPage from './pages/InsurancesPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -55,6 +58,9 @@ function App() {
                           <Route path="/billings" element={<BillingsPage />} />
                           <Route path="/rooms" element={<RoomsPage />} />
                           <Route path="/equipment" element={<EquipmentPage />} />
+                          <Route path="/medical-records" element={<MedicalRecordsPage />} />
+                          <Route path="/medical-conditions" element={<MedicalConditionsPage />} />
+                          <Route path="/insurances" element={<InsurancesPage />} />
                           <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                       </Box>

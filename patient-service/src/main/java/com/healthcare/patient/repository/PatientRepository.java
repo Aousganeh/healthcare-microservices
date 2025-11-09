@@ -22,5 +22,13 @@ public interface PatientRepository extends JpaRepository<Patient, Integer> {
     
     @Query("SELECT p FROM Patient p WHERE p.bloodGroup = :bloodGroup")
     List<Patient> findByBloodGroup(@Param("bloodGroup") String bloodGroup);
+    
+    @Query("SELECT p FROM Patient p WHERE " +
+           "LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.surname) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.phoneNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(p.serialNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    List<Patient> searchPatients(@Param("searchTerm") String searchTerm);
 }
 

@@ -66,7 +66,10 @@ public class PatientService {
     }
     
     public List<PatientDTO> searchPatients(String searchTerm) {
-        return patientRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(searchTerm, searchTerm)
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllPatients();
+        }
+        return patientRepository.searchPatients(searchTerm.trim())
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

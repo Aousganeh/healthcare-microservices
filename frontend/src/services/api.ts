@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { Patient, Doctor, Appointment, AppointmentDetail, Billing, Room, Equipment, LoginRequest, RegisterRequest, AuthResponse } from '../types';
+import type { Patient, Doctor, Appointment, AppointmentDetail, Billing, Room, Equipment, MedicalRecord, MedicalCondition, Insurance, LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -112,6 +112,34 @@ export const equipmentService = {
   delete: (id: number) => api.delete(`/equipment/${id}`),
   getByStatus: (status: string) => api.get<Equipment[]>(`/equipment/status/${status}`),
   getByRoom: (roomId: number) => api.get<Equipment[]>(`/equipment/room/${roomId}`),
+};
+
+export const medicalRecordService = {
+  getAll: () => api.get<MedicalRecord[]>('/medical-records'),
+  getById: (id: number) => api.get<MedicalRecord>(`/medical-records/${id}`),
+  create: (record: MedicalRecord) => api.post<MedicalRecord>('/medical-records', record),
+  update: (id: number, record: MedicalRecord) => api.put<MedicalRecord>(`/medical-records/${id}`, record),
+  delete: (id: number) => api.delete(`/medical-records/${id}`),
+  getByPatient: (patientId: number) => api.get<MedicalRecord[]>(`/medical-records/patient/${patientId}`),
+};
+
+export const medicalConditionService = {
+  getAll: () => api.get<MedicalCondition[]>('/medical-conditions'),
+  getById: (id: number) => api.get<MedicalCondition>(`/medical-conditions/${id}`),
+  create: (condition: MedicalCondition) => api.post<MedicalCondition>('/medical-conditions', condition),
+  update: (id: number, condition: MedicalCondition) => api.put<MedicalCondition>(`/medical-conditions/${id}`, condition),
+  delete: (id: number) => api.delete(`/medical-conditions/${id}`),
+  getByPatient: (patientId: number) => api.get<MedicalCondition[]>(`/medical-conditions/patient/${patientId}`),
+};
+
+export const insuranceService = {
+  getAll: () => api.get<Insurance[]>('/insurances'),
+  getById: (id: number) => api.get<Insurance>(`/insurances/${id}`),
+  create: (insurance: Insurance) => api.post<Insurance>('/insurances', insurance),
+  update: (id: number, insurance: Insurance) => api.put<Insurance>(`/insurances/${id}`, insurance),
+  delete: (id: number) => api.delete(`/insurances/${id}`),
+  getByPatient: (patientId: number) => api.get<Insurance[]>(`/insurances/patient/${patientId}`),
+  getActiveByPatient: (patientId: number) => api.get<Insurance[]>(`/insurances/patient/${patientId}/active`),
 };
 
 export const authService = {

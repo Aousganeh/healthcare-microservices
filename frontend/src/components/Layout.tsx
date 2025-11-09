@@ -26,6 +26,9 @@ import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DescriptionIcon from '@mui/icons-material/Description';
+import HealingIcon from '@mui/icons-material/Healing';
+import SecurityIcon from '@mui/icons-material/Security';
 import { useAuth } from '../contexts/AuthContext';
 
 const drawerWidth = 240;
@@ -38,6 +41,9 @@ const menuItems = [
   { text: 'Billings', icon: <ReceiptIcon />, path: '/billings' },
   { text: 'Rooms', icon: <MeetingRoomIcon />, path: '/rooms' },
   { text: 'Equipment', icon: <MedicalServicesIcon />, path: '/equipment' },
+  { text: 'Medical Records', icon: <DescriptionIcon />, path: '/medical-records' },
+  { text: 'Medical Conditions', icon: <HealingIcon />, path: '/medical-conditions' },
+  { text: 'Insurances', icon: <SecurityIcon />, path: '/insurances' },
 ];
 
 interface LayoutProps {

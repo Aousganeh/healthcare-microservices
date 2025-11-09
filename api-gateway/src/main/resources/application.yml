@@ -16,7 +16,7 @@ spring:
         - id: patient-service
           uri: lb://patient-service
           predicates:
-            - Path=/api/patients/**
+            - Path=/api/patients/**,/api/medical-records/**,/api/medical-conditions/**,/api/insurances/**
           filters:
             - StripPrefix=1
         - id: doctor-service
