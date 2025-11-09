@@ -5,7 +5,7 @@ spring:
   application:
     name: doctor-service
   datasource:
-    url: jdbc:postgresql:
+    url: jdbc:postgresql://postgres-doctor:5432/healthcare_doctor
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -20,7 +20,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http:
+      defaultZone: http://service-discovery:8761/eureka/
   instance:
     prefer-ip-address: true
 

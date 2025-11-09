@@ -8,14 +8,14 @@ spring:
     config:
       server:
         git:
-          uri: file:
+          uri: file:///tmp/config-repo
           clone-on-start: true
           default-label: main
 
 eureka:
   client:
     service-url:
-      defaultZone: http:
+      defaultZone: http://localhost:8761/eureka/
 
 
 
