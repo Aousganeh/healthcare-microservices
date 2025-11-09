@@ -261,8 +261,6 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.check.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
 
       - name: Log in to Container Registry
         if: steps.check.outputs.should_build == 'true'
@@ -292,11 +290,15 @@ jobs:
           context: ${{ matrix.service == 'frontend' && './frontend' || '.' }}
           file: ./${{ matrix.service }}/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          cache-from: |
+            type=gha,scope=${{ matrix.service }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.service }}:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=${{ matrix.service }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.service }}:buildcache,mode=max
           build-args: |
             GRADLE_OPTS=-Xmx1024m -XX:MaxMetaspaceSize=512m
           outputs: type=image,push=true
