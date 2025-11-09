@@ -126,7 +126,7 @@ export default function RoomSelectionModal({
             label="Select Floor"
             select
             value={selectedFloor}
-            onChange={(e) => setSelectedFloor(e.target.value as number)}
+            onChange={(e) => setSelectedFloor(Number(e.target.value))}
             fullWidth
             disabled={loading || floors.length === 0}
           >
