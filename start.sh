@@ -11,8 +11,14 @@ else
   echo "✅ Using image tag: $IMAGE_TAG"
 fi
 
-echo "🛑 Stopping and removing existing containers and volumes..."
-docker-compose -f docker-compose.prod.yml down -v
+echo "🛑 Stopping and removing existing containers..."
+if [ "$CLEAN_VOLUMES" = "true" ]; then
+  echo "⚠️  CLEAN_VOLUMES=true detected - volumes will be deleted (all data will be lost)"
+  docker-compose -f docker-compose.prod.yml down -v
+else
+  echo "ℹ️  Volumes will be preserved (data will be kept). Set CLEAN_VOLUMES=true to delete volumes."
+  docker-compose -f docker-compose.prod.yml down
+fi
 
 echo "🧹 Cleaning up unused images..."
 docker image prune -f
