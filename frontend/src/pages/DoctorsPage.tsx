@@ -16,7 +16,6 @@ import { doctorService } from '../services/api';
 import type { Doctor } from '../types';
 import { Gender, DutyStatus } from '../types';
 import DataTable from '../components/DataTable';
-import { format } from 'date-fns';
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
