@@ -295,10 +295,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=gha,scope=${{ matrix.service }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.service }}:buildcache
           cache-to: |
             type=gha,mode=max,scope=${{ matrix.service }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.service }}:buildcache,mode=max
           build-args: |
             GRADLE_OPTS=-Xmx1024m -XX:MaxMetaspaceSize=512m
           outputs: type=image,push=true
