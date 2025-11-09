@@ -74,4 +74,10 @@ public class RoomController {
     public ResponseEntity<List<RoomDTO>> getAvailableRoomsByFloor(@PathVariable Integer floor) {
         return ResponseEntity.ok(roomService.getAvailableRoomsByFloor(floor));
     }
+    
+    @Operation(summary = "Get available patient rooms by floor", description = "Retrieves all available patient rooms on a specific floor (excludes storage, utility, office, etc.)")
+    @GetMapping("/floor/{floor}/available/patient")
+    public ResponseEntity<List<RoomDTO>> getAvailablePatientRoomsByFloor(@PathVariable Integer floor) {
+        return ResponseEntity.ok(roomService.getAvailablePatientRoomsByFloor(floor));
+    }
 }

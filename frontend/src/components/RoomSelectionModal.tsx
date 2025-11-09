@@ -73,7 +73,7 @@ export default function RoomSelectionModal({
   const loadRoomsByFloor = async (floor: number) => {
     try {
       setLoadingRooms(true);
-      const response = await roomService.getAvailableByFloor(floor);
+      const response = await roomService.getAvailablePatientRoomsByFloor(floor);
       setRooms(response.data);
     } catch (err: unknown) {
       showError(getErrorMessage(err));

@@ -101,6 +101,7 @@ export const roomService = {
   getByType: (type: string) => api.get<Room[]>(`/rooms/type/${encodeURIComponent(type)}`),
   getAllFloors: () => api.get<number[]>('/rooms/floors'),
   getAvailableByFloor: (floor: number) => api.get<Room[]>(`/rooms/floor/${floor}/available`),
+  getAvailablePatientRoomsByFloor: (floor: number) => api.get<Room[]>(`/rooms/floor/${floor}/available/patient`),
 };
 
 export const equipmentService = {
