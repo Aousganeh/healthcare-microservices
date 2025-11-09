@@ -79,10 +79,15 @@ public class RoomService {
     }
     
     public List<RoomDTO> getRoomsByType(String type) {
-        return roomRepository.findByType(type)
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        try {
+            com.healthcare.room.enums.RoomType roomType = com.healthcare.room.enums.RoomType.valueOf(type.toUpperCase());
+            return roomRepository.findByType(roomType)
+                    .stream()
+                    .map(this::toDTO)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid room type: " + type);
+        }
     }
     
     private RoomDTO toDTO(Room room) {

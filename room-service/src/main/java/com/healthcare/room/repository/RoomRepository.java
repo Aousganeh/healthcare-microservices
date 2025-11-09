@@ -1,9 +1,9 @@
 package com.healthcare.room.repository;
 
 import com.healthcare.room.entity.Room;
+import com.healthcare.room.enums.RoomType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface RoomRepository extends JpaRepository<Room, Integer> {
     Optional<Room> findByNumber(String number);
     
-    List<Room> findByType(String type);
+    List<Room> findByType(RoomType type);
     
     List<Room> findByFloor(Integer floor);
     

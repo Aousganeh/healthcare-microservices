@@ -341,6 +341,18 @@ services:
     networks:
       - healthcare-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healthcare-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - healthcare-network
+
 volumes:
   postgres_identity_data:
   postgres_patient_data:
