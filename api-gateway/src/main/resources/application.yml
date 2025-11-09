@@ -42,7 +42,7 @@ spring:
           predicates:
             - Path=/api/rooms/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: equipment-service
           uri: lb://equipment-service
           predicates:
