@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export GITHUB_REPO=aousganeh/healthcare-microservices
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
@@ -31,3 +33,6 @@ echo "  • Eureka Dashboard:    http://localhost:8761"
 echo "  • API Gateway:         http://localhost:8080"
 echo "  • Identity Service:    http://localhost:8001/swagger-ui/index.html"
 echo "  • Patient Service:     http://localhost:8002/swagger-ui/index.html"
+echo "  • Frontend:            http://localhost:3000"
+echo "  • Prometheus:          http://localhost:9090"
+echo "  • Grafana:             http://localhost:3001"
