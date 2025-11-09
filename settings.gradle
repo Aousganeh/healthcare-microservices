@@ -1,0 +1,14 @@
+rootProject.name = 'healthcare-microservices'
+
+include 'api-gateway'
+include 'service-discovery'
+include 'config-server'
+include 'identity-service'
+include 'patient-service'
+include 'doctor-service'
+include 'appointment-service'
+include 'billing-service'
+include 'room-service'
+include 'equipment-service'
+include 'notification-service'
+

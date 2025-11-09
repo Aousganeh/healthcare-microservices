@@ -1,0 +1,336 @@
+services:
+  postgres-identity:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-identity
+    environment:
+      POSTGRES_DB: healthcare_identity
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_identity_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-patient:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-patient
+    environment:
+      POSTGRES_DB: healthcare_patient
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_patient_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-doctor:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-doctor
+    environment:
+      POSTGRES_DB: healthcare_doctor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_doctor_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-appointment:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-appointment
+    environment:
+      POSTGRES_DB: healthcare_appointment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_appointment_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-billing:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-billing
+    environment:
+      POSTGRES_DB: healthcare_billing
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-room:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-room
+    environment:
+      POSTGRES_DB: healthcare_room
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_room_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-equipment:
+    image: postgres:15-alpine
+    container_name: healthcare-postgres-equipment
+    environment:
+      POSTGRES_DB: healthcare_equipment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_equipment_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  service-discovery:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/service-discovery:latest
+    container_name: healthcare-service-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  config-server:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/config-server:latest
+    container_name: healthcare-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  api-gateway:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/api-gateway:latest
+    container_name: healthcare-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  identity-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/identity-service:latest
+    container_name: healthcare-identity-service
+    ports:
+      - "8001:8001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identity:5432/healthcare_identity
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-identity:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  patient-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/patient-service:latest
+    container_name: healthcare-patient-service
+    ports:
+      - "8002:8002"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patient:5432/healthcare_patient
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-patient:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  doctor-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/doctor-service:latest
+    container_name: healthcare-doctor-service
+    ports:
+      - "8003:8003"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-doctor:5432/healthcare_doctor
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-doctor:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  appointment-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/appointment-service:latest
+    container_name: healthcare-appointment-service
+    ports:
+      - "8004:8004"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointment:5432/healthcare_appointment
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-appointment:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  billing-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/billing-service:latest
+    container_name: healthcare-billing-service
+    ports:
+      - "8005:8005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-billing:5432/healthcare_billing
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-billing:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  room-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/room-service:latest
+    container_name: healthcare-room-service
+    ports:
+      - "8006:8006"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-room:5432/healthcare_room
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-room:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  equipment-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/equipment-service:latest
+    container_name: healthcare-equipment-service
+    ports:
+      - "8007:8007"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-equipment:5432/healthcare_equipment
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres-equipment:
+        condition: service_healthy
+      service-discovery:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+
+  notification-service:
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/notification-service:latest
+    container_name: healthcare-notification-service
+    ports:
+      - "8008:8008"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      - service-discovery
+    networks:
+      - healthcare-network
+
+volumes:
+  postgres_identity_data:
+  postgres_patient_data:
+  postgres_doctor_data:
+  postgres_appointment_data:
+  postgres_billing_data:
+  postgres_room_data:
+  postgres_equipment_data:
+
+networks:
+  healthcare-network:
+    driver: bridge
+
