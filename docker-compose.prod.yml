@@ -177,8 +177,6 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
-
-    platform: linux/amd64
   identity-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/identity-service:latest
     platform: linux/amd64
@@ -198,7 +196,6 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
-    platform: linux/amd64
 
   patient-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/patient-service:latest
@@ -218,7 +215,6 @@ services:
       service-discovery:
         condition: service_healthy
     networks:
-    platform: linux/amd64
       - healthcare-network
 
   doctor-service:
@@ -238,7 +234,6 @@ services:
         condition: service_healthy
       service-discovery:
         condition: service_healthy
-    platform: linux/amd64
     networks:
       - healthcare-network
 
@@ -258,7 +253,6 @@ services:
       postgres-appointment:
         condition: service_healthy
       service-discovery:
-    platform: linux/amd64
         condition: service_healthy
     networks:
       - healthcare-network
@@ -278,7 +272,6 @@ services:
     depends_on:
       postgres-billing:
         condition: service_healthy
-    platform: linux/amd64
       service-discovery:
         condition: service_healthy
     networks:
@@ -298,7 +291,6 @@ services:
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-room:
-    platform: linux/amd64
         condition: service_healthy
       service-discovery:
         condition: service_healthy
@@ -318,7 +310,6 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
-    platform: linux/amd64
       postgres-equipment:
         condition: service_healthy
       service-discovery:
@@ -332,7 +323,6 @@ services:
     container_name: healthcare-notification-service
     ports:
       - "8008:8008"
-    platform: linux/amd64
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/

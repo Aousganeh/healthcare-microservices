@@ -1,7 +1,7 @@
 export GITHUB_REPO=aousganeh/healthcare-microservices
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-docker-compose -f docker-compose.prod.yml pull --platform linux/amd64
+docker-compose -f docker-compose.prod.yml pull
 
 docker-compose -f docker-compose.prod.yml up -d
 
