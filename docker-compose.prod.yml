@@ -164,7 +164,6 @@ services:
       - healthcare-network
 
   api-gateway:
-    platform: linux/amd64
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/api-gateway:latest
     platform: linux/amd64
     container_name: healthcare-api-gateway
