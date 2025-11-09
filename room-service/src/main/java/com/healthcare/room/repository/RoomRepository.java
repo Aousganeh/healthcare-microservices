@@ -21,5 +21,11 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
     
     @Query("SELECT r FROM Room r WHERE r.currentOccupancy < r.capacity AND r.isAvailable = true")
     List<Room> findAvailableRooms();
+    
+    @Query("SELECT DISTINCT r.floor FROM Room r WHERE r.floor IS NOT NULL ORDER BY r.floor")
+    List<Integer> findDistinctFloors();
+    
+    @Query("SELECT r FROM Room r WHERE r.floor = :floor AND r.isAvailable = true AND r.isActive = true")
+    List<Room> findAvailableRoomsByFloor(Integer floor);
 }
 

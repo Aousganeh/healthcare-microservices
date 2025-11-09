@@ -10,13 +10,17 @@ import {
   Typography,
   MenuItem,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
-import { patientService, getErrorMessage } from '../services/api';
+import { patientService, getErrorMessage, roomService } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
-import type { Patient } from '../types';
+import type { Patient, Room } from '../types';
 import { Gender, BloodGroup } from '../types';
 import DataTable from '../components/DataTable';
+import RoomSelectionModal from '../components/RoomSelectionModal';
 import { format } from 'date-fns';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function PatientsPage() {
   const { showError, showSuccess } = useNotification();
@@ -26,6 +30,8 @@ export default function PatientsPage() {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [formData, setFormData] = useState<Partial<Patient>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [roomModalOpen, setRoomModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
   useEffect(() => {
     loadPatients();
@@ -74,7 +80,30 @@ export default function PatientsPage() {
     setOpen(false);
     setEditing(null);
     setFormData({});
+    setSelectedRoom(null);
   };
+
+  const handleRoomSelect = (roomId: number) => {
+    setFormData({ ...formData, roomId });
+    loadRoomDetails(roomId);
+  };
+
+  const loadRoomDetails = async (roomId: number) => {
+    try {
+      const response = await roomService.getById(roomId);
+      setSelectedRoom(response.data);
+    } catch (err: unknown) {
+      showError(getErrorMessage(err));
+    }
+  };
+
+  useEffect(() => {
+    if (formData.roomId && open) {
+      loadRoomDetails(formData.roomId);
+    } else if (!formData.roomId) {
+      setSelectedRoom(null);
+    }
+  }, [formData.roomId, open]);
 
   const handleSubmit = async () => {
     try {
@@ -233,11 +262,22 @@ export default function PatientsPage() {
               ))}
             </TextField>
             <TextField
-              label="Room ID"
-              type="number"
-              value={formData.roomId || ''}
-              onChange={(e) => setFormData({ ...formData, roomId: parseInt(e.target.value) || undefined })}
+              label="Room"
+              value={selectedRoom ? `Room ${selectedRoom.number} (Floor ${selectedRoom.floor})` : formData.roomId || ''}
               fullWidth
+              InputProps={{
+                readOnly: true,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setRoomModalOpen(true)} edge="end">
+                      <SearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              onClick={() => setRoomModalOpen(true)}
+              sx={{ cursor: 'pointer' }}
+              helperText="Click to select a room"
             />
           </Box>
         </DialogContent>
@@ -248,6 +288,13 @@ export default function PatientsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <RoomSelectionModal
+        open={roomModalOpen}
+        onClose={() => setRoomModalOpen(false)}
+        onSelect={handleRoomSelect}
+        selectedRoomId={formData.roomId}
+      />
     </Box>
   );
 }

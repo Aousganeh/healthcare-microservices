@@ -116,6 +116,17 @@ public class RoomService {
         }
     }
     
+    public List<Integer> getAllFloors() {
+        return roomRepository.findDistinctFloors();
+    }
+    
+    public List<RoomDTO> getAvailableRoomsByFloor(Integer floor) {
+        return roomRepository.findAvailableRoomsByFloor(floor)
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
     private RoomDTO toDTO(Room room) {
         RoomDTO dto = new RoomDTO();
         dto.setId(room.getId());

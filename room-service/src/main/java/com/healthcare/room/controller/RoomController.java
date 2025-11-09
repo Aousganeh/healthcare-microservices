@@ -62,4 +62,16 @@ public class RoomController {
     public ResponseEntity<List<RoomDTO>> getRoomsByType(@PathVariable String type) {
         return ResponseEntity.ok(roomService.getRoomsByType(type));
     }
+    
+    @Operation(summary = "Get all floors", description = "Retrieves a list of all distinct floors")
+    @GetMapping("/floors")
+    public ResponseEntity<List<Integer>> getAllFloors() {
+        return ResponseEntity.ok(roomService.getAllFloors());
+    }
+    
+    @Operation(summary = "Get available rooms by floor", description = "Retrieves all available rooms on a specific floor")
+    @GetMapping("/floor/{floor}/available")
+    public ResponseEntity<List<RoomDTO>> getAvailableRoomsByFloor(@PathVariable Integer floor) {
+        return ResponseEntity.ok(roomService.getAvailableRoomsByFloor(floor));
+    }
 }

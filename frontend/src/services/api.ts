@@ -99,6 +99,8 @@ export const roomService = {
   delete: (id: number) => api.delete(`/rooms/${id}`),
   getByAvailability: (available: boolean) => api.get<Room[]>(`/rooms/availability/${available}`),
   getByType: (type: string) => api.get<Room[]>(`/rooms/type/${encodeURIComponent(type)}`),
+  getAllFloors: () => api.get<number[]>('/rooms/floors'),
+  getAvailableByFloor: (floor: number) => api.get<Room[]>(`/rooms/floor/${floor}/available`),
 };
 
 export const equipmentService = {
