@@ -128,8 +128,18 @@ public class RoomService {
     }
     
     public List<RoomDTO> getAvailablePatientRoomsByFloor(Integer floor) {
-        return roomRepository.findAvailablePatientRoomsByFloor(floor)
+        List<RoomType> patientRoomTypes = List.of(
+                RoomType.PATIENT_ROOM,
+                RoomType.ICU,
+                RoomType.WARD,
+                RoomType.PRIVATE,
+                RoomType.SEMI_PRIVATE,
+                RoomType.EMERGENCY
+        );
+        
+        return roomRepository.findAvailableRoomsByFloor(floor)
                 .stream()
+                .filter(room -> patientRoomTypes.contains(room.getType()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
