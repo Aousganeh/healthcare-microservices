@@ -135,7 +135,6 @@ services:
   service-discovery:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/service-discovery:latest
     platform: linux/amd64
-    platform: linux/amd64
     container_name: healthcare-service-discovery
     ports:
       - "8761:8761"
@@ -151,7 +150,6 @@ services:
 
   config-server:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/config-server:latest
-    platform: linux/amd64
     container_name: healthcare-config-server
     ports:
       - "8888:8888"
@@ -166,7 +164,6 @@ services:
 
   api-gateway:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/api-gateway:latest
-    platform: linux/amd64
     container_name: healthcare-api-gateway
     ports:
       - "8080:8080"
@@ -181,7 +178,6 @@ services:
 
   identity-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/identity-service:latest
-    platform: linux/amd64
     container_name: healthcare-identity-service
     ports:
       - "8001:8001"
@@ -201,7 +197,6 @@ services:
 
   patient-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/patient-service:latest
-    platform: linux/amd64
     container_name: healthcare-patient-service
     ports:
       - "8002:8002"
@@ -221,7 +216,6 @@ services:
 
   doctor-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/doctor-service:latest
-    platform: linux/amd64
     container_name: healthcare-doctor-service
     ports:
       - "8003:8003"
@@ -241,7 +235,6 @@ services:
 
   appointment-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/appointment-service:latest
-    platform: linux/amd64
     container_name: healthcare-appointment-service
     ports:
       - "8004:8004"
@@ -261,7 +254,6 @@ services:
 
   billing-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/billing-service:latest
-    platform: linux/amd64
     container_name: healthcare-billing-service
     ports:
       - "8005:8005"
@@ -281,7 +273,6 @@ services:
 
   room-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/room-service:latest
-    platform: linux/amd64
     container_name: healthcare-room-service
     ports:
       - "8006:8006"
@@ -301,7 +292,6 @@ services:
 
   equipment-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/equipment-service:latest
-    platform: linux/amd64
     container_name: healthcare-equipment-service
     ports:
       - "8007:8007"
@@ -321,7 +311,6 @@ services:
 
   notification-service:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/notification-service:latest
-    platform: linux/amd64
     container_name: healthcare-notification-service
     ports:
       - "8008:8008"
@@ -335,7 +324,6 @@ services:
 
   frontend:
     image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/frontend:latest
-    platform: linux/amd64
     container_name: healthcare-frontend
     ports:
       - "3000:80"
