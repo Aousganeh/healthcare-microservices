@@ -173,3 +173,30 @@ export interface Equipment {
   roomId?: number;
 }
 
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  type: string;
+  username: string;
+  email: string;
+  roles: string[];
+}
+
+export interface User {
+  username: string;
+  email: string;
+  roles: string[];
+}
+

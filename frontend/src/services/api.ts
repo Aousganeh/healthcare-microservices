@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { Patient, Doctor, Appointment, AppointmentDetail, Billing, Room, Equipment } from '../types';
+import type { Patient, Doctor, Appointment, AppointmentDetail, Billing, Room, Equipment, LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -9,6 +9,26 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -89,5 +109,10 @@ export const equipmentService = {
   delete: (id: number) => api.delete(`/equipment/${id}`),
   getByStatus: (status: string) => api.get<Equipment[]>(`/equipment/status/${status}`),
   getByRoom: (roomId: number) => api.get<Equipment[]>(`/equipment/room/${roomId}`),
+};
+
+export const authService = {
+  login: (credentials: LoginRequest) => api.post<AuthResponse>('/auth/login', credentials),
+  register: (data: RegisterRequest) => api.post<AuthResponse>('/auth/register', data),
 };
 

@@ -3,6 +3,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import PatientsPage from './pages/PatientsPage';
@@ -11,6 +12,8 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import BillingsPage from './pages/BillingsPage';
 import RoomsPage from './pages/RoomsPage';
 import EquipmentPage from './pages/EquipmentPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 const theme = createTheme({
   palette: {
@@ -23,27 +26,45 @@ const theme = createTheme({
   },
 });
 
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <NotificationProvider>
-        <Router>
-          <Layout>
-            <Box sx={{ flexGrow: 1, p: 3 }}>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/patients" element={<PatientsPage />} />
-                <Route path="/doctors" element={<DoctorsPage />} />
-                <Route path="/appointments" element={<AppointmentsPage />} />
-                <Route path="/billings" element={<BillingsPage />} />
-                <Route path="/rooms" element={<RoomsPage />} />
-                <Route path="/equipment" element={<EquipmentPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Box>
-          </Layout>
-        </Router>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Box sx={{ flexGrow: 1, p: 3 }}>
+                        <Routes>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/patients" element={<PatientsPage />} />
+                          <Route path="/doctors" element={<DoctorsPage />} />
+                          <Route path="/appointments" element={<AppointmentsPage />} />
+                          <Route path="/billings" element={<BillingsPage />} />
+                          <Route path="/rooms" element={<RoomsPage />} />
+                          <Route path="/equipment" element={<EquipmentPage />} />
+                          <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                      </Box>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
+        </AuthProvider>
       </NotificationProvider>
     </ThemeProvider>
   );
