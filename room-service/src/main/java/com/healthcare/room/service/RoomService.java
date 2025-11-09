@@ -29,6 +29,8 @@ public class RoomService {
     }
     
     public RoomDTO createRoom(RoomDTO roomDTO) {
+        validateRoomData(roomDTO);
+        
         if (roomRepository.findByNumber(roomDTO.getNumber()).isPresent()) {
             throw new RuntimeException("Room with number already exists: " + roomDTO.getNumber());
         }
@@ -38,27 +40,51 @@ public class RoomService {
             room.setCurrentOccupancy(0);
         }
         if (room.getIsAvailable() == null) {
-            room.setIsAvailable(true);
+            room.setIsAvailable(room.getCurrentOccupancy() < room.getCapacity());
         }
         if (room.getIsActive() == null) {
             room.setIsActive(true);
         }
+        
+        validateRoomBusinessRules(room);
         
         room = roomRepository.save(room);
         return toDTO(room);
     }
     
     public RoomDTO updateRoom(Integer id, RoomDTO roomDTO) {
+        validateRoomData(roomDTO);
+        
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room not found with id: " + id));
         
-        room.setNumber(roomDTO.getNumber());
-        room.setType(roomDTO.getType());
-        room.setCapacity(roomDTO.getCapacity());
-        room.setFloor(roomDTO.getFloor());
-        room.setCurrentOccupancy(roomDTO.getCurrentOccupancy());
-        room.setIsAvailable(roomDTO.getIsAvailable());
-        room.setIsActive(roomDTO.getIsActive());
+        if (roomDTO.getNumber() != null && !roomDTO.getNumber().equals(room.getNumber())) {
+            if (roomRepository.findByNumber(roomDTO.getNumber()).isPresent()) {
+                throw new RuntimeException("Room with number already exists: " + roomDTO.getNumber());
+            }
+            room.setNumber(roomDTO.getNumber());
+        }
+        
+        if (roomDTO.getType() != null) {
+            room.setType(roomDTO.getType());
+        }
+        if (roomDTO.getCapacity() != null) {
+            room.setCapacity(roomDTO.getCapacity());
+        }
+        if (roomDTO.getFloor() != null) {
+            room.setFloor(roomDTO.getFloor());
+        }
+        if (roomDTO.getCurrentOccupancy() != null) {
+            room.setCurrentOccupancy(roomDTO.getCurrentOccupancy());
+        }
+        if (roomDTO.getIsAvailable() != null) {
+            room.setIsAvailable(roomDTO.getIsAvailable());
+        }
+        if (roomDTO.getIsActive() != null) {
+            room.setIsActive(roomDTO.getIsActive());
+        }
+        
+        validateRoomBusinessRules(room);
         
         room = roomRepository.save(room);
         return toDTO(room);
@@ -101,6 +127,62 @@ public class RoomService {
         dto.setIsAvailable(room.getIsAvailable());
         dto.setIsActive(room.getIsActive());
         return dto;
+    }
+    
+    private void validateRoomData(RoomDTO roomDTO) {
+        if (roomDTO.getCapacity() != null && roomDTO.getCapacity() < 1) {
+            throw new IllegalArgumentException("Room capacity must be at least 1");
+        }
+        
+        if (roomDTO.getCurrentOccupancy() != null && roomDTO.getCurrentOccupancy() < 0) {
+            throw new IllegalArgumentException("Current occupancy cannot be negative");
+        }
+        
+        if (roomDTO.getCapacity() != null && roomDTO.getCurrentOccupancy() != null) {
+            if (roomDTO.getCurrentOccupancy() > roomDTO.getCapacity()) {
+                throw new IllegalArgumentException("Current occupancy (" + roomDTO.getCurrentOccupancy() + 
+                    ") cannot exceed capacity (" + roomDTO.getCapacity() + ")");
+            }
+        }
+        
+        if (roomDTO.getType() != null && roomDTO.getCapacity() != null) {
+            validateRoomTypeCapacity(roomDTO.getType(), roomDTO.getCapacity());
+        }
+    }
+    
+    private void validateRoomBusinessRules(Room room) {
+        if (room.getCapacity() == null || room.getCapacity() < 1) {
+            throw new IllegalArgumentException("Room capacity must be at least 1");
+        }
+        
+        if (room.getCurrentOccupancy() == null) {
+            room.setCurrentOccupancy(0);
+        }
+        
+        if (room.getCurrentOccupancy() < 0) {
+            throw new IllegalArgumentException("Current occupancy cannot be negative");
+        }
+        
+        if (room.getCurrentOccupancy() > room.getCapacity()) {
+            throw new IllegalArgumentException("Current occupancy (" + room.getCurrentOccupancy() + 
+                ") cannot exceed capacity (" + room.getCapacity() + ")");
+        }
+        
+        if (room.getType() != null) {
+            validateRoomTypeCapacity(room.getType(), room.getCapacity());
+        }
+        
+        if (room.getIsAvailable() == null) {
+            room.setIsAvailable(room.getCurrentOccupancy() < room.getCapacity());
+        } else if (room.getIsAvailable() && room.getCurrentOccupancy() >= room.getCapacity()) {
+            room.setIsAvailable(false);
+        }
+    }
+    
+    private void validateRoomTypeCapacity(com.healthcare.room.enums.RoomType roomType, Integer capacity) {
+        if (capacity < 1) {
+            throw new IllegalArgumentException(roomType + " room type must have capacity of at least 1, but got: " + capacity);
+        }
     }
     
     private Room toEntity(RoomDTO dto) {
