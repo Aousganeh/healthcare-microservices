@@ -1,12 +1,17 @@
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /workspace/app
+
 COPY build.gradle settings.gradle* ./
 COPY gradlew ./
 COPY gradle gradle
 RUN chmod +x ./gradlew
-COPY . .
-ENV GRADLE_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m"
-RUN ./gradlew :notification-service:build -x test --no-daemon --max-workers=1
+
+COPY notification-service/build.gradle notification-service/
+RUN ./gradlew :notification-service:dependencies --no-daemon || true
+
+COPY notification-service/src notification-service/src
+ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true"
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :notification-service:build -x test --no-daemon --build-cache --parallel
 
 FROM eclipse-temurin:17-jre-jammy
 VOLUME /tmp
