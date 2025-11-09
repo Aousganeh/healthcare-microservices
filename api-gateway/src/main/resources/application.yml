@@ -12,31 +12,31 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: patient-service
           uri: lb://patient-service
           predicates:
             - Path=/api/patients/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: doctor-service
           uri: lb://doctor-service
           predicates:
             - Path=/api/doctors/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: appointment-service
           uri: lb://appointment-service
           predicates:
             - Path=/api/appointments/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: billing-service
           uri: lb://billing-service
           predicates:
             - Path=/api/billings/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: room-service
           uri: lb://room-service
           predicates:
@@ -48,13 +48,13 @@ spring:
           predicates:
             - Path=/api/equipment/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
         - id: notification-service
           uri: lb://notification-service
           predicates:
             - Path=/api/notifications/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
