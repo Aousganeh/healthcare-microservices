@@ -9,8 +9,11 @@ else
   echo "✅ Using image tag: $IMAGE_TAG"
 fi
 
-echo "🛑 Stopping and removing existing containers..."
-docker-compose -f docker-compose.prod.yml down
+echo "🛑 Stopping and removing existing containers and volumes..."
+docker-compose -f docker-compose.prod.yml down -v
+
+echo "🧹 Cleaning up unused images..."
+docker image prune -f
 
 echo "📥 Pulling latest images..."
 docker-compose -f docker-compose.prod.yml pull
