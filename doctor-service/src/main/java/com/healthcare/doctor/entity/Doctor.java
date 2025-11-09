@@ -1,0 +1,53 @@
+package com.healthcare.doctor.entity;
+
+import com.healthcare.doctor.enums.DutyStatus;
+import com.healthcare.doctor.enums.Gender;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "doctors")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Doctor extends BaseAuditableEntity {
+    private String name;
+    private String surname;
+    
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+    
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+    
+    private String email;
+    
+    @Column(name = "phone_number")
+    private String phoneNumber;
+    
+    @Column(name = "license_number", unique = true)
+    private String licenseNumber;
+    
+    @Column(name = "specialization")
+    private String specialization;
+    
+    @Column(name = "department")
+    private String department;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "duty_status")
+    private DutyStatus dutyStatus;
+    
+    @Column(name = "years_of_experience")
+    private Integer yearsOfExperience;
+    
+    @Column(columnDefinition = "TEXT")
+    private String qualifications;
+}
+

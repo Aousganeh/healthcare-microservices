@@ -133,7 +133,7 @@ services:
       retries: 5
 
   service-discovery:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/service-discovery:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/service-discovery:latest
     container_name: healthcare-service-discovery
     ports:
       - "8761:8761"
@@ -148,7 +148,7 @@ services:
       retries: 3
 
   config-server:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/config-server:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/config-server:latest
     container_name: healthcare-config-server
     ports:
       - "8888:8888"
@@ -162,7 +162,7 @@ services:
       - healthcare-network
 
   api-gateway:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/api-gateway:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/api-gateway:latest
     container_name: healthcare-api-gateway
     ports:
       - "8080:8080"
@@ -176,7 +176,7 @@ services:
       - healthcare-network
 
   identity-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/identity-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/identity-service:latest
     container_name: healthcare-identity-service
     ports:
       - "8001:8001"
@@ -195,7 +195,7 @@ services:
       - healthcare-network
 
   patient-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/patient-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/patient-service:latest
     container_name: healthcare-patient-service
     ports:
       - "8002:8002"
@@ -214,7 +214,7 @@ services:
       - healthcare-network
 
   doctor-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/doctor-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/doctor-service:latest
     container_name: healthcare-doctor-service
     ports:
       - "8003:8003"
@@ -233,7 +233,7 @@ services:
       - healthcare-network
 
   appointment-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/appointment-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/appointment-service:latest
     container_name: healthcare-appointment-service
     ports:
       - "8004:8004"
@@ -252,7 +252,7 @@ services:
       - healthcare-network
 
   billing-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/billing-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/billing-service:latest
     container_name: healthcare-billing-service
     ports:
       - "8005:8005"
@@ -271,7 +271,7 @@ services:
       - healthcare-network
 
   room-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/room-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/room-service:latest
     container_name: healthcare-room-service
     ports:
       - "8006:8006"
@@ -290,7 +290,7 @@ services:
       - healthcare-network
 
   equipment-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/equipment-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/equipment-service:latest
     container_name: healthcare-equipment-service
     ports:
       - "8007:8007"
@@ -309,7 +309,7 @@ services:
       - healthcare-network
 
   notification-service:
-    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-your-username/healthcare-microservices}/notification-service:latest
+    image: ${REGISTRY:-ghcr.io}/${GITHUB_REPO:-aousganeh/healthcare-microservices}/notification-service:latest
     container_name: healthcare-notification-service
     ports:
       - "8008:8008"
