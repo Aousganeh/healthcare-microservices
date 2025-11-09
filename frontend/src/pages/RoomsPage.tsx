@@ -85,12 +85,27 @@ export default function RoomsPage() {
     }
   };
 
+  const requiresCapacity = (type: RoomType | undefined): boolean => {
+    if (!type) return true;
+    const nonCapacityTypes = [
+      RoomType.STORAGE_ROOM,
+      RoomType.UTILITY_ROOM,
+      RoomType.OFFICE,
+      RoomType.MEETING_ROOM,
+      RoomType.LABORATORY,
+      RoomType.PHARMACY,
+      RoomType.KITCHEN,
+      RoomType.LAUNDRY
+    ];
+    return !nonCapacityTypes.includes(type);
+  };
+
   const columns = [
     { id: 'id', label: 'ID', minWidth: 50 },
     { id: 'number', label: 'Room Number', minWidth: 120 },
     { id: 'type', label: 'Type', minWidth: 120 },
-    { id: 'capacity', label: 'Capacity', minWidth: 80 },
-    { id: 'currentOccupancy', label: 'Occupancy', minWidth: 100 },
+    { id: 'capacity', label: 'Capacity', minWidth: 80, format: (value: number | undefined) => value ?? 'N/A' },
+    { id: 'currentOccupancy', label: 'Occupancy', minWidth: 100, format: (value: number | undefined) => value ?? 'N/A' },
     { id: 'floor', label: 'Floor', minWidth: 80 },
     { id: 'isAvailable', label: 'Available', minWidth: 100, format: (value: boolean) => value ? 'Yes' : 'No' },
     { id: 'isActive', label: 'Active', minWidth: 80, format: (value: boolean) => value ? 'Yes' : 'No' },
@@ -127,46 +142,67 @@ export default function RoomsPage() {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
+              label="Room Type"
+              select
+              value={formData.type || ''}
+              onChange={(e) => {
+                const newType = e.target.value as RoomType;
+                const newFormData: Partial<Room> = { type: newType };
+                if (!requiresCapacity(newType)) {
+                  newFormData.capacity = undefined;
+                  newFormData.currentOccupancy = undefined;
+                }
+                setFormData({ ...formData, ...newFormData });
+              }}
+              required
+              fullWidth
+            >
+              {Object.values(RoomType).map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type.replace(/_/g, ' ')}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
               label="Room Number"
               value={formData.number || ''}
               onChange={(e) => setFormData({ ...formData, number: e.target.value })}
               required
               fullWidth
             />
-            <TextField
-              label="Room Type"
-              select
-              value={formData.type || ''}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as RoomType })}
-              required
-              fullWidth
-            >
-              {Object.values(RoomType).map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type.replace('_', ' ')}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Capacity"
-              type="number"
-              value={formData.capacity || ''}
-              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-              required
-              fullWidth
-            />
+            {formData.type && requiresCapacity(formData.type) && (
+              <>
+                <TextField
+                  label="Capacity"
+                  type="number"
+                  value={formData.capacity || ''}
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value ? parseInt(e.target.value) : undefined })}
+                  required
+                  fullWidth
+                  inputProps={{ min: 1 }}
+                  helperText="Required for this room type"
+                />
+                <TextField
+                  label="Current Occupancy"
+                  type="number"
+                  value={formData.currentOccupancy || ''}
+                  onChange={(e) => setFormData({ ...formData, currentOccupancy: e.target.value ? parseInt(e.target.value) : undefined })}
+                  fullWidth
+                  inputProps={{ min: 0, max: formData.capacity }}
+                  helperText={formData.capacity ? `Maximum: ${formData.capacity}` : 'Set capacity first'}
+                />
+              </>
+            )}
+            {formData.type && !requiresCapacity(formData.type) && (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                Capacity and occupancy are not required for {formData.type.replace(/_/g, ' ')} rooms
+              </Typography>
+            )}
             <TextField
               label="Floor"
               type="number"
               value={formData.floor || ''}
-              onChange={(e) => setFormData({ ...formData, floor: parseInt(e.target.value) || undefined })}
-              fullWidth
-            />
-            <TextField
-              label="Current Occupancy"
-              type="number"
-              value={formData.currentOccupancy || ''}
-              onChange={(e) => setFormData({ ...formData, currentOccupancy: parseInt(e.target.value) || undefined })}
+              onChange={(e) => setFormData({ ...formData, floor: e.target.value ? parseInt(e.target.value) : undefined })}
               fullWidth
             />
             <TextField

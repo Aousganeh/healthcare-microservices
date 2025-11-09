@@ -21,7 +21,7 @@ public class Room extends BaseAuditableEntity {
     @Column(name = "type")
     private RoomType type;
     
-    @Column(name = "capacity", nullable = false)
+    @Column(name = "capacity")
     private Integer capacity;
     
     @Column(name = "floor")

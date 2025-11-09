@@ -130,8 +130,13 @@ public class RoomService {
     }
     
     private void validateRoomData(RoomDTO roomDTO) {
-        if (roomDTO.getCapacity() != null && roomDTO.getCapacity() < 1) {
-            throw new IllegalArgumentException("Room capacity must be at least 1");
+        if (requiresCapacity(roomDTO.getType())) {
+            if (roomDTO.getCapacity() == null) {
+                throw new IllegalArgumentException("Room capacity is required for " + roomDTO.getType() + " room type");
+            }
+            if (roomDTO.getCapacity() < 1) {
+                throw new IllegalArgumentException("Room capacity must be at least 1");
+            }
         }
         
         if (roomDTO.getCurrentOccupancy() != null && roomDTO.getCurrentOccupancy() < 0) {
@@ -151,32 +156,52 @@ public class RoomService {
     }
     
     private void validateRoomBusinessRules(Room room) {
-        if (room.getCapacity() == null || room.getCapacity() < 1) {
-            throw new IllegalArgumentException("Room capacity must be at least 1");
-        }
-        
-        if (room.getCurrentOccupancy() == null) {
+        if (requiresCapacity(room.getType())) {
+            if (room.getCapacity() == null || room.getCapacity() < 1) {
+                throw new IllegalArgumentException("Room capacity must be at least 1 for " + room.getType() + " room type");
+            }
+            
+            if (room.getCurrentOccupancy() == null) {
+                room.setCurrentOccupancy(0);
+            }
+            
+            if (room.getCurrentOccupancy() < 0) {
+                throw new IllegalArgumentException("Current occupancy cannot be negative");
+            }
+            
+            if (room.getCurrentOccupancy() > room.getCapacity()) {
+                throw new IllegalArgumentException("Current occupancy (" + room.getCurrentOccupancy() + 
+                    ") cannot exceed capacity (" + room.getCapacity() + ")");
+            }
+            
+            if (room.getIsAvailable() == null) {
+                room.setIsAvailable(room.getCurrentOccupancy() < room.getCapacity());
+            } else if (room.getIsAvailable() && room.getCurrentOccupancy() >= room.getCapacity()) {
+                room.setIsAvailable(false);
+            }
+        } else {
+            if (room.getCurrentOccupancy() != null && room.getCurrentOccupancy() != 0) {
+                throw new IllegalArgumentException("Current occupancy should be 0 or null for " + room.getType() + " room type");
+            }
             room.setCurrentOccupancy(0);
+            if (room.getIsAvailable() == null) {
+                room.setIsAvailable(true);
+            }
         }
         
-        if (room.getCurrentOccupancy() < 0) {
-            throw new IllegalArgumentException("Current occupancy cannot be negative");
-        }
-        
-        if (room.getCurrentOccupancy() > room.getCapacity()) {
-            throw new IllegalArgumentException("Current occupancy (" + room.getCurrentOccupancy() + 
-                ") cannot exceed capacity (" + room.getCapacity() + ")");
-        }
-        
-        if (room.getType() != null) {
+        if (room.getType() != null && room.getCapacity() != null) {
             validateRoomTypeCapacity(room.getType(), room.getCapacity());
         }
-        
-        if (room.getIsAvailable() == null) {
-            room.setIsAvailable(room.getCurrentOccupancy() < room.getCapacity());
-        } else if (room.getIsAvailable() && room.getCurrentOccupancy() >= room.getCapacity()) {
-            room.setIsAvailable(false);
+    }
+    
+    private boolean requiresCapacity(com.healthcare.room.enums.RoomType roomType) {
+        if (roomType == null) {
+            return true;
         }
+        return switch (roomType) {
+            case STORAGE_ROOM, UTILITY_ROOM, OFFICE, MEETING_ROOM, LABORATORY, PHARMACY, KITCHEN, LAUNDRY -> false;
+            default -> true;
+        };
     }
     
     private void validateRoomTypeCapacity(com.healthcare.room.enums.RoomType roomType, Integer capacity) {

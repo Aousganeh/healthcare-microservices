@@ -64,7 +64,15 @@ export enum RoomType {
   PRIVATE = 'PRIVATE',
   SEMI_PRIVATE = 'SEMI_PRIVATE',
   EXAMINATION_ROOM = 'EXAMINATION_ROOM',
-  RECOVERY_ROOM = 'RECOVERY_ROOM'
+  RECOVERY_ROOM = 'RECOVERY_ROOM',
+  STORAGE_ROOM = 'STORAGE_ROOM',
+  UTILITY_ROOM = 'UTILITY_ROOM',
+  OFFICE = 'OFFICE',
+  MEETING_ROOM = 'MEETING_ROOM',
+  LABORATORY = 'LABORATORY',
+  PHARMACY = 'PHARMACY',
+  KITCHEN = 'KITCHEN',
+  LAUNDRY = 'LAUNDRY'
 }
 
 export enum EquipmentStatus {
@@ -143,7 +151,7 @@ export interface Room {
   id?: number;
   number: string;
   type: RoomType;
-  capacity: number;
+  capacity?: number;
   floor?: number;
   currentOccupancy?: number;
   isAvailable?: boolean;
