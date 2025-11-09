@@ -68,42 +68,67 @@ jobs:
         with:
           filters: |
             service-discovery:
+              - 'service-discovery/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             config-server:
+              - 'config-server/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             api-gateway:
+              - 'api-gateway/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             identity-service:
+              - 'identity-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             patient-service:
+              - 'patient-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             doctor-service:
+              - 'doctor-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             appointment-service:
+              - 'appointment-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             billing-service:
+              - 'billing-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             room-service:
+              - 'room-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             equipment-service:
+              - 'equipment-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             notification-service:
+              - 'notification-service/**'
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
             frontend:
+              - 'frontend/**'
             root:
               - 'build.gradle'
               - 'settings.gradle'
+              - 'gradle/**'
+              - '.github/workflows/**'
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -199,6 +224,7 @@ jobs:
             LATEST_SHA=$(git rev-parse origin/$BRANCH)
             
             if [ "$SERVICE_PATH" != "frontend" ]; then
+              if git diff --quiet $CURRENT_SHA $LATEST_SHA -- "$SERVICE_PATH/**" "build.gradle" "settings.gradle" "gradle/**"; then
                 echo "should_build=false" >> $GITHUB_OUTPUT
                 echo "⏭️  ${{ matrix.service }} changed in this commit but also in newer commit, skipping (newer will build)"
               else
@@ -206,6 +232,7 @@ jobs:
                 echo "✅ ${{ matrix.service }} changed in this commit, newer commit doesn't have same changes, will build"
               fi
             else
+              if git diff --quiet $CURRENT_SHA $LATEST_SHA -- "$SERVICE_PATH/**"; then
                 echo "should_build=false" >> $GITHUB_OUTPUT
                 echo "⏭️  ${{ matrix.service }} changed in this commit but also in newer commit, skipping (newer will build)"
               else
