@@ -29,7 +29,12 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
     List<Room> findAvailableRoomsByFloor(Integer floor);
     
     @Query("SELECT r FROM Room r WHERE r.floor = :floor AND r.isAvailable = true AND r.isActive = true " +
-           "AND r.type IN ('PATIENT_ROOM', 'ICU', 'WARD', 'PRIVATE', 'SEMI_PRIVATE', 'EMERGENCY')")
+           "AND r.type IN (com.healthcare.room.enums.RoomType.PATIENT_ROOM, " +
+           "com.healthcare.room.enums.RoomType.ICU, " +
+           "com.healthcare.room.enums.RoomType.WARD, " +
+           "com.healthcare.room.enums.RoomType.PRIVATE, " +
+           "com.healthcare.room.enums.RoomType.SEMI_PRIVATE, " +
+           "com.healthcare.room.enums.RoomType.EMERGENCY)")
     List<Room> findAvailablePatientRoomsByFloor(Integer floor);
 }
 
