@@ -13,9 +13,12 @@ import {
   billingService,
   roomService,
   equipmentService,
+  getErrorMessage,
 } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 
 export default function Dashboard() {
+  const { showError } = useNotification();
   const [stats, setStats] = useState({
     patients: 0,
     doctors: 0,
@@ -47,14 +50,14 @@ export default function Dashboard() {
           equipment: equipment.data.length,
         });
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        showError(getErrorMessage(error));
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [showError]);
 
   if (loading) {
     return (
