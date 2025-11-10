@@ -114,7 +114,7 @@ const DoctorsPage = () => {
                   return (
                     <Card key={doctor.id} className="hover:shadow-glow transition-all duration-300">
                       <CardHeader className="pb-4">
-                        <div className="flex items-start gap-4">
+                        <Link to={`/doctors/${doctor.id}`} className="flex items-start gap-4">
                           {doctor.photoUrl ? (
                             <>
                               <img
@@ -140,7 +140,7 @@ const DoctorsPage = () => {
                             </div>
                           )}
                           <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-1">
+                            <h3 className="text-xl font-semibold mb-1 hover:text-primary transition-colors">
                               Dr. {doctor.name} {doctor.surname}
                             </h3>
                             <Badge variant="secondary" className="mb-2">
@@ -153,7 +153,7 @@ const DoctorsPage = () => {
                               </div>
                             )}
                           </div>
-                        </div>
+                        </Link>
                       </CardHeader>
 
                       <CardContent className="space-y-3">

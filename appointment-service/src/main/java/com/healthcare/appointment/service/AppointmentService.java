@@ -275,8 +275,21 @@ public class AppointmentService {
         String workingDays = (String) doctor.get("workingDays");
         if (workingDays != null && !workingDays.isEmpty()) {
             DayOfWeek dayOfWeek = date.getDayOfWeek();
-            List<String> days = Arrays.asList(workingDays.split(","));
-            if (!days.contains(dayOfWeek.name())) {
+            String dayName = dayOfWeek.name();
+            
+            // Parse working days - support both "MONDAY,TUESDAY,..." and "MON-FRI" formats
+            List<String> days = new ArrayList<>();
+            String[] parts = workingDays.split(",");
+            for (String part : parts) {
+                String trimmed = part.trim().toUpperCase();
+                if (trimmed.equals("MON-FRI") || trimmed.equals("MONDAY-FRIDAY")) {
+                    days.addAll(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"));
+                } else {
+                    days.add(trimmed);
+                }
+            }
+            
+            if (!days.contains(dayName)) {
                 return new ArrayList<>(); // Doctor doesn't work on this day
             }
         }

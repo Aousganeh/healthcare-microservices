@@ -57,7 +57,7 @@ public class Doctor extends BaseAuditableEntity {
     @Column(name = "working_hours_end")
     private LocalTime workingHoursEnd;
     
-    @Column(name = "working_days", length = 20)
+    @Column(name = "working_days", length = 100)
     private String workingDays;
 
     @Column(name = "photo_url", columnDefinition = "TEXT")

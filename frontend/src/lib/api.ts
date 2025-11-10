@@ -52,6 +52,10 @@ export function getDoctors() {
   return request<Doctor[]>(`${API_BASE}/doctors`);
 }
 
+export function getDoctor(doctorId: number) {
+  return request<Doctor>(`${API_BASE}/doctors/${doctorId}`);
+}
+
 export function getPatients() {
   return request<Patient[]>(`${API_BASE}/patients`);
 }
