@@ -28,6 +28,12 @@ public class DoctorService {
         return toDTO(doctor);
     }
     
+    public DoctorDTO getDoctorByEmail(String email) {
+        Doctor doctor = doctorRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
+        return toDTO(doctor);
+    }
+    
     public DoctorDTO createDoctor(DoctorDTO doctorDTO) {
         if (doctorDTO.getEmail() != null && doctorRepository.findByEmail(doctorDTO.getEmail()).isPresent()) {
             throw new RuntimeException("Doctor with email already exists: " + doctorDTO.getEmail());

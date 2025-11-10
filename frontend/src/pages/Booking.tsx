@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { Filter, Loader2, Search } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ import type { AppointmentPayload, Doctor } from "@/types/api";
 const Booking = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [specializationFilter, setSpecializationFilter] = useState<string>("all");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
@@ -28,6 +30,16 @@ const Booking = () => {
     queryKey: ["doctors"],
     queryFn: getDoctors,
   });
+
+  useEffect(() => {
+    const doctorId = searchParams.get("doctorId");
+    if (doctorId && doctors.length > 0) {
+      const doctor = doctors.find((d: Doctor) => d.id === Number(doctorId));
+      if (doctor) {
+        setSelectedDoctor(doctor);
+      }
+    }
+  }, [searchParams, doctors]);
 
   // Get patient by user's email
   const {
@@ -62,7 +74,7 @@ const Booking = () => {
 
   const handleBookDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
-    document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth" });
+    setSearchParams({ doctorId: doctor.id.toString() });
   };
 
   const uniqueSpecializations = useMemo(() => {
@@ -151,44 +163,48 @@ const Booking = () => {
                 </p>
               </div>
             )}
-          </div>
-        </section>
 
-        <section id="booking-form" className="py-12 bg-gradient-subtle">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-semibold">Appointment Details</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Select a doctor from the list above, then choose a patient and time.
-                  </p>
+            {selectedDoctor && (
+              <div className="mt-12 max-w-3xl mx-auto">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-semibold">Appointment Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Selected: Dr. {selectedDoctor.name} {selectedDoctor.surname}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedDoctor(undefined);
+                      setSearchParams({});
+                    }}
+                  >
+                    Clear selection
+                  </Button>
                 </div>
-                <Button variant="outline" onClick={() => setSelectedDoctor(undefined)}>
-                  Clear selection
-                </Button>
+
+                {hasPatientError ? (
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
+                    <p className="font-semibold mb-2">Patient profile not found</p>
+                    <p className="text-sm">
+                      Please contact support to create a patient profile for your account ({user?.email}).
+                    </p>
+                  </div>
+                ) : isLoadingPatient ? (
+                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                    <p className="text-muted-foreground">Loading your profile...</p>
+                  </div>
+                ) : patient ? (
+                  <AppointmentForm
+                    doctor={selectedDoctor}
+                    patientId={patient.id}
+                    onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload)}
+                  />
+                ) : null}
               </div>
-
-              {hasPatientError ? (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
-                  <p className="font-semibold mb-2">Patient profile not found</p>
-                  <p className="text-sm">
-                    Please contact support to create a patient profile for your account ({user?.email}).
-                  </p>
-                </div>
-              ) : isLoadingPatient ? (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                  <p className="text-muted-foreground">Loading your profile...</p>
-                </div>
-              ) : patient ? (
-                <AppointmentForm
-                  doctor={selectedDoctor}
-                  patientId={patient.id}
-                  onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload)}
-                />
-              ) : null}
-            </div>
+            )}
           </div>
         </section>
       </main>

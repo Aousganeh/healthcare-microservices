@@ -71,9 +71,6 @@ export default function LoginPage() {
                 required
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted-foreground">
-                You can login with your email address or fincode (serial number)
-              </p>
             </div>
 
             <div className="space-y-2">

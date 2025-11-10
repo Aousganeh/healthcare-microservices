@@ -8,7 +8,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { getDoctors } from "@/lib/api";
 import type { Doctor } from "@/types/api";
 import { Activity } from "lucide-react";
@@ -184,10 +183,6 @@ const DoctorsPage = () => {
                             <span>{doctor.phoneNumber}</span>
                           </div>
                         )}
-
-                        <Button variant="hero" className="w-full mt-4" asChild>
-                          <Link to={`/booking?doctorId=${doctor.id}`}>Book Appointment</Link>
-                        </Button>
                       </CardContent>
                     </Card>
                   );

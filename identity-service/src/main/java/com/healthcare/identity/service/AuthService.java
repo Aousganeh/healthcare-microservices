@@ -6,6 +6,7 @@ import com.healthcare.identity.dto.RegisterRequest;
 import com.healthcare.identity.entity.Role;
 import com.healthcare.identity.entity.User;
 import com.healthcare.identity.feign.PatientServiceClient;
+import com.healthcare.identity.feign.DoctorServiceClient;
 import com.healthcare.identity.repository.RoleRepository;
 import com.healthcare.identity.repository.UserRepository;
 import com.healthcare.identity.util.JwtUtil;
@@ -31,6 +32,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final PatientServiceClient patientServiceClient;
+    private final DoctorServiceClient doctorServiceClient;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -79,6 +81,21 @@ public class AuthService {
                     }
                 }
             } catch (Exception e) {
+            }
+            
+            if (user == null) {
+                try {
+                    Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(loginIdentifier);
+                    String doctorEmail = (String) doctor.get("email");
+                    if (doctorEmail != null) {
+                        user = userRepository.findByEmail(doctorEmail)
+                                .orElse(null);
+                        if (user != null) {
+                            emailForAuth = user.getEmail();
+                        }
+                    }
+                } catch (Exception e) {
+                }
             }
         }
         
