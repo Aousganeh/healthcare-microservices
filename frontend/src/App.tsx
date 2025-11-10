@@ -1,80 +1,33 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Box } from '@mui/material';
-import { NotificationProvider } from './contexts/NotificationContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import PatientsPage from './pages/PatientsPage';
-import DoctorsPage from './pages/DoctorsPage';
-import AppointmentsPage from './pages/AppointmentsPage';
-import BillingsPage from './pages/BillingsPage';
-import RoomsPage from './pages/RoomsPage';
-import EquipmentPage from './pages/EquipmentPage';
-import MedicalRecordsPage from './pages/MedicalRecordsPage';
-import MedicalConditionsPage from './pages/MedicalConditionsPage';
-import InsurancesPage from './pages/InsurancesPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "@/pages/Index";
+import Services from "@/pages/Services";
+import Booking from "@/pages/Booking";
+import Dashboard from "@/pages/Dashboard";
+import NotFound from "@/pages/NotFound";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <NotificationProvider>
-        <AuthProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Box sx={{ flexGrow: 1, p: 3 }}>
-                        <Routes>
-                          <Route path="/" element={<Dashboard />} />
-                          <Route path="/patients" element={<PatientsPage />} />
-                          <Route path="/doctors" element={<DoctorsPage />} />
-                          <Route path="/appointments" element={<AppointmentsPage />} />
-                          <Route path="/billings" element={<BillingsPage />} />
-                          <Route path="/rooms" element={<RoomsPage />} />
-                          <Route path="/equipment" element={<EquipmentPage />} />
-                          <Route path="/medical-records" element={<MedicalRecordsPage />} />
-                          <Route path="/medical-conditions" element={<MedicalConditionsPage />} />
-                          <Route path="/insurances" element={<InsurancesPage />} />
-                          <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                      </Box>
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Router>
-        </AuthProvider>
-      </NotificationProvider>
-    </ThemeProvider>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
-
