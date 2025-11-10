@@ -11,7 +11,6 @@ import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -47,7 +46,6 @@ export default function RegisterPage() {
 
     try {
       await register(
-        formData.username,
         formData.email,
         formData.password,
         formData.firstName || undefined,
@@ -110,19 +108,6 @@ export default function RegisterPage() {
                   disabled={isLoading}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="username">Username *</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="johndoe"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
             </div>
 
             <div className="space-y-2">

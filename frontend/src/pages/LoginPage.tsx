@@ -59,16 +59,19 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Email or Fincode</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Enter your email or fincode"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
               />
+              <p className="text-xs text-muted-foreground">
+                You can login with your email address or fincode (serial number)
+              </p>
             </div>
 
             <div className="space-y-2">

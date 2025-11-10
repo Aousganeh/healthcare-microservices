@@ -52,7 +52,7 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
     };
 
     try {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
       await onSubmit(payload);
       toast.success("Appointment booked successfully!");
       setReason("");
@@ -76,22 +76,22 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
           Pick a convenient time and describe the reason for the visit.
         </CardDescription>
       </CardHeader>
-
+      
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label>Appointment Date</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
+                <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
                   onSelect={(newDate) => {
                     setDate(newDate || undefined);
                     setSelectedTimeSlot(null); // Reset time slot when date changes
@@ -99,13 +99,13 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
                       setCalendarOpen(false); // Close popover after date selection
                     }
                   }}
-                  initialFocus
+                    initialFocus
                   disabled={(currentDate) => currentDate < new Date()}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
           {date && doctor && (
             <div className="space-y-2">

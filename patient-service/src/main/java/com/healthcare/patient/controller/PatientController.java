@@ -70,6 +70,12 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getPatientByEmail(email));
     }
     
+    @Operation(summary = "Get patient by serial number", description = "Retrieves a patient by their serial number (fincode)")
+    @GetMapping("/serial/{serialNumber}")
+    public ResponseEntity<PatientDTO> getPatientBySerialNumber(@PathVariable String serialNumber) {
+        return ResponseEntity.ok(patientService.getPatientBySerialNumber(serialNumber));
+    }
+    
     @Operation(summary = "Get patient's appointments", description = "Retrieves all appointments for this patient (via Appointment Service)")
     @GetMapping("/{id}/appointments")
     public ResponseEntity<?> getPatientAppointments(@PathVariable Integer id) {

@@ -5,6 +5,7 @@ import com.healthcare.identity.dto.LoginRequest;
 import com.healthcare.identity.dto.RegisterRequest;
 import com.healthcare.identity.entity.Role;
 import com.healthcare.identity.entity.User;
+import com.healthcare.identity.feign.PatientServiceClient;
 import com.healthcare.identity.repository.RoleRepository;
 import com.healthcare.identity.repository.UserRepository;
 import com.healthcare.identity.util.JwtUtil;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,18 +30,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final PatientServiceClient patientServiceClient;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUsername(request.getEmail());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
@@ -58,12 +58,37 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        String loginIdentifier = request.getUsername();
+        User user = null;
+        String emailForAuth = null;
+        
+        user = userRepository.findByEmail(loginIdentifier)
+                .orElse(null);
+        
+        if (user != null) {
+            emailForAuth = user.getEmail();
+        } else {
+            try {
+                Map<String, Object> patient = patientServiceClient.getPatientBySerialNumber(loginIdentifier);
+                String patientEmail = (String) patient.get("email");
+                if (patientEmail != null) {
+                    user = userRepository.findByEmail(patientEmail)
+                            .orElse(null);
+                    if (user != null) {
+                        emailForAuth = user.getEmail();
+                    }
+                }
+            } catch (Exception e) {
+            }
+        }
+        
+        if (user == null || emailForAuth == null) {
+            throw new UsernameNotFoundException("User not found with email or fincode: " + loginIdentifier);
+        }
+        
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(emailForAuth, request.getPassword())
         );
-
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return generateAuthResponse(user);
     }

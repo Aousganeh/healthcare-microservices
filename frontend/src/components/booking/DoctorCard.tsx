@@ -33,7 +33,7 @@ export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
               {doctor.department && (
                 <div className="text-sm text-muted-foreground">
                   Department: <span className="font-medium text-foreground">{doctor.department}</span>
-                </div>
+              </div>
               )}
             </div>
           </div>
@@ -47,17 +47,17 @@ export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
         </div>
         
         {doctor.email && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4 text-primary" />
             <span>{doctor.email}</span>
-          </div>
+        </div>
         )}
-
+        
         {doctor.phoneNumber && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Phone className="h-4 w-4 text-primary" />
             <span>{doctor.phoneNumber}</span>
-          </div>
+        </div>
         )}
 
         <Button 

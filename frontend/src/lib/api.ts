@@ -67,6 +67,10 @@ export function getAppointmentsByPatient(patientId: number) {
   return request<AppointmentDetail[]>(`${API_BASE}/appointments/patient/${patientId}/details`);
 }
 
+export function getAppointmentsByDoctor(doctorId: number) {
+  return request<AppointmentDetail[]>(`${API_BASE}/appointments/doctor/${doctorId}/details`);
+}
+
 export function getHealthMetrics(patientId: number) {
   return request<HealthMetric[]>(`${API_BASE}/health-metrics/patient/${patientId}`);
 }

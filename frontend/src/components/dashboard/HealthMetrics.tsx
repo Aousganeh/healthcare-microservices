@@ -18,34 +18,34 @@ export const HealthMetrics = ({ metrics }: HealthMetricsProps) => {
   const latestMetric = metrics[0];
 
   const metricCards = [
-    {
-      title: "Heart Rate",
+  {
+    title: "Heart Rate",
       value: latestMetric.heartRate ? `${latestMetric.heartRate}` : "N/A",
       unit: latestMetric.heartRate ? "bpm" : "",
-      icon: Heart,
-    },
-    {
-      title: "Blood Pressure",
+    icon: Heart,
+  },
+  {
+    title: "Blood Pressure",
       value:
         latestMetric.systolicBloodPressure && latestMetric.diastolicBloodPressure
           ? `${latestMetric.systolicBloodPressure}/${latestMetric.diastolicBloodPressure}`
           : "N/A",
       unit: latestMetric.systolicBloodPressure && latestMetric.diastolicBloodPressure ? "mmHg" : "",
-      icon: Activity,
-    },
-    {
-      title: "Blood Sugar",
+    icon: Activity,
+  },
+  {
+    title: "Blood Sugar",
       value: latestMetric.bloodSugarMgDl ? `${latestMetric.bloodSugarMgDl}` : "N/A",
       unit: latestMetric.bloodSugarMgDl ? "mg/dL" : "",
-      icon: Droplet,
-    },
-    {
-      title: "Oxygen Level",
+    icon: Droplet,
+  },
+  {
+    title: "Oxygen Level",
       value: latestMetric.oxygenSaturation ? `${latestMetric.oxygenSaturation}` : "N/A",
       unit: latestMetric.oxygenSaturation ? "%" : "",
-      icon: Wind,
-    },
-  ];
+    icon: Wind,
+  },
+];
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -57,11 +57,11 @@ export const HealthMetrics = ({ metrics }: HealthMetricsProps) => {
               <metric.icon className="h-4 w-4 text-primary" />
             </div>
           </CardHeader>
-
+          
           <CardContent>
             <div className="text-3xl font-bold">
-              {metric.value}
-              <span className="text-lg text-muted-foreground ml-1">{metric.unit}</span>
+                  {metric.value}
+                  <span className="text-lg text-muted-foreground ml-1">{metric.unit}</span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
               Last recorded on {new Date(latestMetric.recordedAt).toLocaleDateString()}

@@ -88,6 +88,12 @@ public class PatientService {
         return toDTO(patient);
     }
     
+    public PatientDTO getPatientBySerialNumber(String serialNumber) {
+        Patient patient = patientRepository.findBySerialNumber(serialNumber)
+                .orElseThrow(() -> new RuntimeException("Patient not found with serial number: " + serialNumber));
+        return toDTO(patient);
+    }
+    
     private PatientDTO toDTO(Patient patient) {
         PatientDTO dto = new PatientDTO();
         dto.setId(patient.getId());

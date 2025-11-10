@@ -31,13 +31,13 @@ export const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <Button variant="hero" size="lg" className="group" asChild>
                 <Link to="/booking">
-                  Book Appointment
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                Book Appointment
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="rounded-xl" asChild>
                 <Link to="/services">
-                  Learn More
+                Learn More
                 </Link>
               </Button>
             </div>

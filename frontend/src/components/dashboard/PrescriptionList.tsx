@@ -47,7 +47,7 @@ export const PrescriptionList = ({ prescriptions, doctors }: PrescriptionListPro
         <CardTitle className="text-2xl">Active Prescriptions</CardTitle>
         <CardDescription>Medications currently prescribed for this patient</CardDescription>
       </CardHeader>
-
+      
       <CardContent className="space-y-4">
         {prescriptions.map((prescription) => {
           const doctorName = prescription.prescribingDoctorId
@@ -57,21 +57,21 @@ export const PrescriptionList = ({ prescriptions, doctors }: PrescriptionListPro
 
           return (
             <Card key={prescription.id} className="hover:shadow-medium transition-all">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex gap-3">
-                    <div className="bg-primary/10 p-2 rounded-lg">
-                      <Pill className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-lg">{prescription.medicationName}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {prescription.dosage} • {prescription.frequency}
-                      </p>
-                    </div>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex gap-3">
+                  <div className="bg-primary/10 p-2 rounded-lg">
+                    <Pill className="h-5 w-5 text-primary" />
                   </div>
-
-                    <Badge
+                  <div>
+                      <h4 className="font-semibold text-lg">{prescription.medicationName}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {prescription.dosage} • {prescription.frequency}
+                    </p>
+                  </div>
+                </div>
+                
+                <Badge 
                       variant={status === "active" ? "default" : "secondary"}
                       className={
                         status === "on_hold"
@@ -80,28 +80,28 @@ export const PrescriptionList = ({ prescriptions, doctors }: PrescriptionListPro
                           ? "bg-secondary text-secondary-foreground"
                           : undefined
                       }
-                    >
+                >
                       {status.replace("_", " ")}
-                    </Badge>
-                </div>
+                </Badge>
+              </div>
 
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
                     <span>{formatDateRange(prescription.startDate, prescription.endDate)}</span>
-                  </div>
-                  <div className="text-muted-foreground">
-                    Prescribed by <span className="font-medium text-foreground">{doctorName}</span>
-                  </div>
-                  {prescription.notes && <p className="text-muted-foreground">{prescription.notes}</p>}
                 </div>
+                <div className="text-muted-foreground">
+                    Prescribed by <span className="font-medium text-foreground">{doctorName}</span>
+                </div>
+                  {prescription.notes && <p className="text-muted-foreground">{prescription.notes}</p>}
+              </div>
 
                 <Button variant="outline" size="sm" className="w-full mt-4" type="button">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Prescription
-                </Button>
-              </CardContent>
-            </Card>
+                <Download className="h-4 w-4 mr-2" />
+                Download Prescription
+              </Button>
+            </CardContent>
+          </Card>
           );
         })}
       </CardContent>
