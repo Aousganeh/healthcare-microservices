@@ -116,7 +116,7 @@ const DoctorProfile = () => {
   const initials = `${doctor.name?.charAt(0) ?? ""}${doctor.surname?.charAt(0) ?? ""}`.toUpperCase();
   const experienceLabel =
     doctor.yearsOfExperience != null ? `${doctor.yearsOfExperience} years experience` : "Experience N/A";
-  const specialization = doctor.specialization ?? "General Practice";
+  const specialization = doctor.specializationName || doctor.specialization || "General Practice";
   const isOwnProfile = isDoctor && user?.email === doctor.email;
 
   const formatTimeForInput = (time?: string) => {
@@ -136,7 +136,7 @@ const DoctorProfile = () => {
     updateDoctorMutation.mutate({
       name: doctor.name,
       surname: doctor.surname,
-      specialization: doctor.specialization,
+      specializationId: doctor.specializationId || 0,
       licenseNumber: doctor.licenseNumber,
       email: doctor.email,
       phoneNumber: doctor.phoneNumber,

@@ -45,8 +45,17 @@ public class DoctorService {
             throw new RuntimeException("Doctor with license number already exists: " + doctorDTO.getLicenseNumber());
         }
         
-        Specialization specialization = specializationRepository.findById(doctorDTO.getSpecializationId())
-                .orElseThrow(() -> new RuntimeException("Specialization not found with id: " + doctorDTO.getSpecializationId()));
+        Specialization specialization;
+        if (doctorDTO.getSpecializationId() == null || doctorDTO.getSpecializationId() == 0) {
+            List<Specialization> activeSpecializations = specializationRepository.findByActiveTrue();
+            if (activeSpecializations.isEmpty()) {
+                throw new RuntimeException("No active specializations found. Please create at least one specialization first.");
+            }
+            specialization = activeSpecializations.get(0);
+        } else {
+            specialization = specializationRepository.findById(doctorDTO.getSpecializationId())
+                    .orElseThrow(() -> new RuntimeException("Specialization not found with id: " + doctorDTO.getSpecializationId()));
+        }
         
         Doctor doctor = toEntity(doctorDTO);
         doctor.setSpecialization(specialization);

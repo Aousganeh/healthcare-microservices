@@ -141,7 +141,7 @@ const DoctorDashboard = () => {
       updateDoctorMutation.mutate({
         name: doctor.name,
         surname: doctor.surname,
-        specialization: doctor.specialization,
+        specializationId: doctor.specializationId || 0,
         licenseNumber: doctor.licenseNumber,
         email: doctor.email,
         phoneNumber: doctor.phoneNumber,
@@ -201,7 +201,7 @@ const DoctorDashboard = () => {
                   Welcome back, Dr. {doctor.name} {doctor.surname}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {doctor.specialization} • {doctor.department || "General Practice"}
+                  {doctor.specializationName || doctor.specialization || "N/A"} • {doctor.department || "General Practice"}
                 </p>
               </div>
               <Button variant="outline" onClick={handleOpenSettings}>

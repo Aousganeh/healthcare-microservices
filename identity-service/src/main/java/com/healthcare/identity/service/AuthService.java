@@ -202,7 +202,7 @@ public class AuthService {
             doctorDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
             doctorDTO.put("email", user.getEmail());
             doctorDTO.put("licenseNumber", "LIC-" + System.currentTimeMillis());
-            doctorDTO.put("specialization", "General Practice");
+            doctorDTO.put("specializationId", 0);
             doctorDTO.put("dutyStatus", "ON_DUTY");
             doctorDTO.put("workingHoursStart", "09:00");
             doctorDTO.put("workingHoursEnd", "17:00");
