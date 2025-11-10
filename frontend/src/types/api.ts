@@ -9,9 +9,10 @@ export interface Doctor {
   email?: string;
   phoneNumber?: string;
   qualifications?: string;
-  workingHoursStart?: string; // HH:mm format
-  workingHoursEnd?: string; // HH:mm format
-  workingDays?: string; // Comma-separated: MONDAY,TUESDAY,...
+  workingHoursStart?: string;
+  workingHoursEnd?: string;
+  workingDays?: string;
+  photoUrl?: string;
 }
 
 export interface Patient {

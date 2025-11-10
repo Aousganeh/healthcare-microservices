@@ -27,6 +27,7 @@ export const Navbar = () => {
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
+    { to: "/doctors", label: "Doctors" },
     { to: "/booking", label: "Book Appointment" },
     { to: "/dashboard", label: "Dashboard" },
   ];

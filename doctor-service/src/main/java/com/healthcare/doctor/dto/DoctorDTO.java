@@ -53,6 +53,8 @@ public class DoctorDTO {
     
     private LocalTime workingHoursEnd;
     
-    private String workingDays; // Comma-separated: MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY
+    private String workingDays;
+    
+    private String photoUrl;
 }
 

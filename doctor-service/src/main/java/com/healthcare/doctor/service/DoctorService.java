@@ -60,6 +60,7 @@ public class DoctorService {
         doctor.setWorkingHoursStart(doctorDTO.getWorkingHoursStart());
         doctor.setWorkingHoursEnd(doctorDTO.getWorkingHoursEnd());
         doctor.setWorkingDays(doctorDTO.getWorkingDays());
+        doctor.setPhotoUrl(doctorDTO.getPhotoUrl());
         
         doctor = doctorRepository.save(doctor);
         return toDTO(doctor);
@@ -111,6 +112,7 @@ public class DoctorService {
         dto.setWorkingHoursStart(doctor.getWorkingHoursStart());
         dto.setWorkingHoursEnd(doctor.getWorkingHoursEnd());
         dto.setWorkingDays(doctor.getWorkingDays());
+        dto.setPhotoUrl(doctor.getPhotoUrl());
         return dto;
     }
     
@@ -131,6 +133,7 @@ public class DoctorService {
         doctor.setWorkingHoursStart(dto.getWorkingHoursStart());
         doctor.setWorkingHoursEnd(dto.getWorkingHoursEnd());
         doctor.setWorkingDays(dto.getWorkingDays());
+        doctor.setPhotoUrl(dto.getPhotoUrl());
         return doctor;
     }
 }

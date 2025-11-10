@@ -58,6 +58,9 @@ public class Doctor extends BaseAuditableEntity {
     private LocalTime workingHoursEnd;
     
     @Column(name = "working_days", length = 20)
-    private String workingDays; // Comma-separated: MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY
+    private String workingDays;
+
+    @Column(name = "photo_url", columnDefinition = "TEXT")
+    private String photoUrl;
 }
 

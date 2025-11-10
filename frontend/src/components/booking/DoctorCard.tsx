@@ -20,9 +20,30 @@ export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex gap-4">
-            <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
-              {initials || <Activity className="h-8 w-8" />}
-            </div>
+            {doctor.photoUrl ? (
+              <>
+                <img
+                  src={doctor.photoUrl}
+                  alt={`${doctor.name} ${doctor.surname}`}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/20"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) {
+                      fallback.style.display = "flex";
+                    }
+                  }}
+                />
+                <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold hidden">
+                  {initials || <Activity className="h-8 w-8" />}
+                </div>
+              </>
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
+                {initials || <Activity className="h-8 w-8" />}
+              </div>
+            )}
             <div>
               <h3 className="text-xl font-semibold mb-1">
                 {doctor.name} {doctor.surname}
