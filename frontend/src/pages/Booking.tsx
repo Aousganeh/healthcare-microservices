@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Filter, Loader2, Search } from "lucide-react";
+
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { DoctorCard } from "@/components/booking/DoctorCard";
@@ -6,68 +9,72 @@ import { AppointmentForm } from "@/components/booking/AppointmentForm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
-
-const doctors = [
-  {
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiology",
-    rating: 4.9,
-    reviews: 127,
-    location: "Downtown Medical Center",
-    availability: "Available Today",
-    experience: "15",
-  },
-  {
-    name: "Dr. Michael Chen",
-    specialty: "General Practice",
-    rating: 4.8,
-    reviews: 203,
-    location: "Northside Clinic",
-    availability: "Next Available: Tomorrow",
-    experience: "12",
-  },
-  {
-    name: "Dr. Emily Rodriguez",
-    specialty: "Pediatrics",
-    rating: 5.0,
-    reviews: 156,
-    location: "Children's Health Center",
-    availability: "Available Today",
-    experience: "10",
-  },
-  {
-    name: "Dr. James Wilson",
-    specialty: "Orthopedics",
-    rating: 4.7,
-    reviews: 89,
-    location: "Sports Medicine Clinic",
-    availability: "Next Available: 2 days",
-    experience: "18",
-  },
-];
+import { getDoctors, getPatients, createAppointment } from "@/lib/api";
+import type { AppointmentPayload, Doctor } from "@/types/api";
 
 const Booking = () => {
-  const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
+  const [specializationFilter, setSpecializationFilter] = useState<string>("all");
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
 
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const {
+    data: doctors = [],
+    isLoading: isLoadingDoctors,
+    isError: hasDoctorError,
+  } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: getDoctors,
+  });
 
-  const handleBookDoctor = (doctorName: string) => {
-    setSelectedDoctor(doctorName);
-    // Scroll to form
+  const {
+    data: patients = [],
+    isLoading: isLoadingPatients,
+    isError: hasPatientError,
+  } = useQuery({
+    queryKey: ["patients"],
+    queryFn: getPatients,
+  });
+
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter((doctor: Doctor) => {
+      const matchesSearch =
+        `${doctor.name} ${doctor.surname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (doctor.specialization ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSpecialization =
+        specializationFilter === "all" ||
+        (doctor.specialization ?? "").toLowerCase() === specializationFilter.toLowerCase();
+      return matchesSearch && matchesSpecialization;
+    });
+  }, [doctors, searchQuery, specializationFilter]);
+
+  const createAppointmentMutation = useMutation({
+    mutationFn: (payload: AppointmentPayload) => createAppointment(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments", "patient"] });
+    },
+  });
+
+  const handleBookDoctor = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
     document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const uniqueSpecializations = useMemo(() => {
+    const set = new Set<string>();
+    doctors.forEach((doctor: Doctor) => {
+      if (doctor.specialization) {
+        set.add(doctor.specialization);
+      }
+    });
+    return Array.from(set);
+  }, [doctors]);
 
   return (
     <div className="min-h-screen">
       <Navbar />
-      
+
       <main className="pt-20">
-        {/* Hero Section */}
         <section className="bg-gradient-hero py-16 md:py-24">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
@@ -76,31 +83,31 @@ const Booking = () => {
               </div>
               <h1 className="mb-6">Find Your Perfect Healthcare Provider</h1>
               <p className="text-xl text-muted-foreground mb-8">
-                Search from our network of expert doctors and book your appointment instantly.
+                Explore our network of specialists and secure an appointment in just a few clicks.
               </p>
 
-              {/* Search Bar */}
-              <div className="flex gap-3 max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     placeholder="Search by doctor name or specialty..."
                     className="pl-10 h-12 rounded-xl"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(event) => setSearchQuery(event.target.value)}
                   />
                 </div>
-                <Select>
-                  <SelectTrigger className="w-48 h-12 rounded-xl">
+                <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
+                  <SelectTrigger className="w-full sm:w-48 h-12 rounded-xl">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Specialties</SelectItem>
-                    <SelectItem value="cardiology">Cardiology</SelectItem>
-                    <SelectItem value="general">General Practice</SelectItem>
-                    <SelectItem value="pediatrics">Pediatrics</SelectItem>
-                    <SelectItem value="orthopedics">Orthopedics</SelectItem>
+                    {uniqueSpecializations.map((specialization) => (
+                      <SelectItem key={specialization} value={specialization}>
+                        {specialization}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -108,38 +115,71 @@ const Booking = () => {
           </div>
         </section>
 
-        {/* Doctors List */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-8">Available Doctors</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDoctors.map((doctor, index) => (
-                <DoctorCard
-                  key={index}
-                  {...doctor}
-                  onBook={() => handleBookDoctor(doctor.name)}
-                />
-              ))}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Available Doctors</h2>
+              {(isLoadingDoctors || isLoadingPatients) && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading data...
+                </div>
+              )}
             </div>
+
+            {hasDoctorError ? (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-6 text-destructive">
+                Unable to load doctors. Please try again later.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDoctors.map((doctor: Doctor) => (
+                  <DoctorCard key={doctor.id} doctor={doctor} onBook={handleBookDoctor} />
+                ))}
+              </div>
+            )}
+
+            {!isLoadingDoctors && filteredDoctors.length === 0 && !hasDoctorError && (
+              <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center">
+                <p className="text-muted-foreground">
+                  No doctors match your filters. Try adjusting your search or filters.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Booking Form */}
         <section id="booking-form" className="py-12 bg-gradient-subtle">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto">
-              {selectedDoctor && (
-                <div className="mb-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
-                  <p className="text-sm text-muted-foreground">Booking appointment with</p>
-                  <p className="font-semibold text-lg text-primary">{selectedDoctor}</p>
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold">Appointment Details</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Select a doctor from the list above, then choose a patient and time.
+                  </p>
                 </div>
+                <Button variant="outline" onClick={() => setSelectedDoctor(undefined)}>
+                  Clear selection
+                </Button>
+              </div>
+
+              {hasPatientError ? (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
+                  Unable to load patients. Please refresh or try again later.
+                </div>
+              ) : (
+                <AppointmentForm
+                  doctor={selectedDoctor}
+                  patients={patients}
+                  onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload)}
+                />
               )}
-              <AppointmentForm />
             </div>
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );

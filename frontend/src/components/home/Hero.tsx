@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Shield, Heart } from "lucide-react";
 import heroImage from "@/assets/hero-healthcare.jpg";
@@ -28,12 +29,16 @@ export const Hero = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button variant="hero" size="lg" className="group">
-                Book Appointment
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Button variant="hero" size="lg" className="group" asChild>
+                <Link to="/booking">
+                  Book Appointment
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
-              <Button variant="outline" size="lg" className="rounded-xl">
-                Learn More
+              <Button variant="outline" size="lg" className="rounded-xl" asChild>
+                <Link to="/services">
+                  Learn More
+                </Link>
               </Button>
             </div>
 

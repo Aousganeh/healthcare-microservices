@@ -1,89 +1,117 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { format, setHours, setMinutes } from "date-fns";
+import { CalendarIcon, Clock } from "lucide-react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Clock } from "lucide-react";
-import { format } from "date-fns";
-import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
-export const AppointmentForm = () => {
+import type { AppointmentPayload, Doctor, Patient } from "@/types/api";
+
+interface AppointmentFormProps {
+  doctor?: Doctor;
+  patients: Patient[];
+  onSubmit: (payload: AppointmentPayload) => Promise<void>;
+}
+
+export const AppointmentForm = ({ doctor, patients, onSubmit }: AppointmentFormProps) => {
   const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState<string>("");
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Appointment booked successfully!", {
-        description: "You will receive a confirmation email shortly.",
-      });
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!doctor) {
+      toast.error("Please select a doctor before booking.");
+      return;
+    }
+
+    if (!patientId) {
+      toast.error("Please select a patient.");
+      return;
+    }
+
+    if (!date || !time) {
+      toast.error("Please choose a date and time.");
+      return;
+    }
+
+    const [hours, minutes] = time.split(":").map(Number);
+    const appointmentDate = setMinutes(setHours(date, hours ?? 0), minutes ?? 0);
+
+    const payload: AppointmentPayload = {
+      doctorId: doctor.id,
+      patientId,
+      appointmentDate: appointmentDate.toISOString(),
+      reason,
+      notes,
+    };
+
+    try {
+      setIsSubmitting(true);
+      await onSubmit(payload);
+      toast.success("Appointment booked successfully!");
+      setReason("");
+      setNotes("");
+      setDate(undefined);
+      setTime("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to book appointment");
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
     <Card className="shadow-large">
       <CardHeader>
-        <CardTitle className="text-2xl">Book Your Appointment</CardTitle>
-        <CardDescription>Fill in your details and select your preferred date and time</CardDescription>
+        <CardTitle className="text-2xl">
+          {doctor ? `Book with Dr. ${doctor.name} ${doctor.surname}` : "Select a doctor to begin"}
+        </CardTitle>
+        <CardDescription>
+          Choose a patient, pick a convenient time, and describe the reason for the visit.
+        </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" placeholder="John" required />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" placeholder="Doe" required />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="john.doe@example.com" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="specialty">Specialty</Label>
-            <Select required>
-              <SelectTrigger id="specialty">
-                <SelectValue placeholder="Select a specialty" />
+            <Label htmlFor="patient">Patient</Label>
+            <Select
+              disabled={patients.length === 0}
+              value={patientId?.toString() ?? ""}
+              onValueChange={(value) => setPatientId(Number(value))}
+              required
+            >
+              <SelectTrigger id="patient">
+                <SelectValue placeholder={patients.length ? "Select patient" : "No patients available"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="general">General Practice</SelectItem>
-                <SelectItem value="cardiology">Cardiology</SelectItem>
-                <SelectItem value="dermatology">Dermatology</SelectItem>
-                <SelectItem value="pediatrics">Pediatrics</SelectItem>
-                <SelectItem value="orthopedics">Orthopedics</SelectItem>
+                {patients.map((patient) => (
+                  <SelectItem key={patient.id} value={patient.id.toString()}>
+                    {patient.name} {patient.surname}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Preferred Date</Label>
+              <Label>Appointment Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : <span>Pick a date</span>}
                   </Button>
@@ -94,7 +122,7 @@ export const AppointmentForm = () => {
                     selected={date}
                     onSelect={setDate}
                     initialFocus
-                    disabled={(date) => date < new Date()}
+                    disabled={(currentDate) => currentDate < new Date()}
                     className="pointer-events-auto"
                   />
                 </PopoverContent>
@@ -102,33 +130,43 @@ export const AppointmentForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="time">Preferred Time</Label>
-              <Select required>
-                <SelectTrigger id="time">
-                  <SelectValue placeholder="Select a time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="09:00">09:00 AM</SelectItem>
-                  <SelectItem value="10:00">10:00 AM</SelectItem>
-                  <SelectItem value="11:00">11:00 AM</SelectItem>
-                  <SelectItem value="14:00">02:00 PM</SelectItem>
-                  <SelectItem value="15:00">03:00 PM</SelectItem>
-                  <SelectItem value="16:00">04:00 PM</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="time">Appointment Time</Label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="time"
+                  type="time"
+                  value={time}
+                  onChange={(event) => setTime(event.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="reason">Reason for Visit</Label>
-            <Textarea
+            <Input
               id="reason"
-              placeholder="Briefly describe your symptoms or reason for the appointment"
+              placeholder="Follow-up, consultation, routine check-up..."
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              placeholder="Any additional information the doctor should know"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
               rows={4}
             />
           </div>
 
-          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isSubmitting || !doctor}>
             {isSubmitting ? "Booking..." : "Confirm Appointment"}
           </Button>
         </form>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,11 +132,15 @@ const Services = () => {
               Book an appointment with one of our specialists or start with a general consultation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="lg">
-                Book Appointment
+              <Button variant="hero" size="lg" asChild>
+                <Link to="/booking">
+                  Book Appointment
+                </Link>
               </Button>
-              <Button variant="outline" size="lg">
-                Contact Us
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/">
+                  Contact Us
+                </Link>
               </Button>
             </div>
           </div>

@@ -1,47 +1,40 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, Award } from "lucide-react";
+import { Activity, Award, Mail, Phone } from "lucide-react";
+import type { Doctor } from "@/types/api";
 
 interface DoctorCardProps {
-  name: string;
-  specialty: string;
-  rating: number;
-  reviews: number;
-  location: string;
-  availability: string;
-  experience: string;
-  onBook: () => void;
+  doctor: Doctor;
+  onBook: (doctor: Doctor) => void;
 }
 
-export const DoctorCard = ({
-  name,
-  specialty,
-  rating,
-  reviews,
-  location,
-  availability,
-  experience,
-  onBook,
-}: DoctorCardProps) => {
+export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
+  const initials = `${doctor.name?.charAt(0) ?? ""}${doctor.surname?.charAt(0) ?? ""}`.toUpperCase();
+  const experienceLabel =
+    doctor.yearsOfExperience != null ? `${doctor.yearsOfExperience} years experience` : "Experience N/A";
+  const specialization = doctor.specialization ?? "General Practice";
+
   return (
     <Card className="hover:shadow-glow transition-all duration-300 cursor-pointer group">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex gap-4">
             <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-white text-2xl font-bold">
-              {name.split(" ").map(n => n[0]).join("")}
+              {initials || <Activity className="h-8 w-8" />}
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-1">{name}</h3>
+              <h3 className="text-xl font-semibold mb-1">
+                {doctor.name} {doctor.surname}
+              </h3>
               <Badge variant="secondary" className="mb-2">
-                {specialty}
+                {specialization}
               </Badge>
-              <div className="flex items-center gap-1 text-sm">
-                <Star className="h-4 w-4 fill-primary text-primary" />
-                <span className="font-medium">{rating}</span>
-                <span className="text-muted-foreground">({reviews} reviews)</span>
-              </div>
+              {doctor.department && (
+                <div className="text-sm text-muted-foreground">
+                  Department: <span className="font-medium text-foreground">{doctor.department}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -50,23 +43,27 @@ export const DoctorCard = ({
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Award className="h-4 w-4 text-primary" />
-          <span>{experience} years experience</span>
+          <span>{experienceLabel}</span>
         </div>
         
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4 text-primary" />
-          <span>{location}</span>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4 text-primary" />
-          <span>{availability}</span>
-        </div>
+        {doctor.email && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Mail className="h-4 w-4 text-primary" />
+            <span>{doctor.email}</span>
+          </div>
+        )}
+
+        {doctor.phoneNumber && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="h-4 w-4 text-primary" />
+            <span>{doctor.phoneNumber}</span>
+          </div>
+        )}
 
         <Button 
           variant="hero" 
           className="w-full mt-4"
-          onClick={onBook}
+          onClick={() => onBook(doctor)}
         >
           Book Appointment
         </Button>

@@ -159,34 +159,47 @@ public class AppointmentService {
     }
     
     public List<AppointmentDetailDTO> getAppointmentDetailsByPatientId(Integer patientId) {
+        Map<String, Object> patientDetails = null;
+        try {
+            patientDetails = patientServiceClient.getPatientById(patientId);
+        } catch (Exception ignored) {
+        }
+
+        Map<String, Object> finalPatientDetails = patientDetails;
+
         return appointmentRepository.findByPatientId(patientId)
-                .stream()
-                .map(appointment -> {
-                    AppointmentDetailDTO detailDTO = new AppointmentDetailDTO();
-                    detailDTO.setId(appointment.getId());
-                    detailDTO.setPatientId(appointment.getPatientId());
-                    detailDTO.setDoctorId(appointment.getDoctorId());
-                    detailDTO.setAppointmentDate(appointment.getAppointmentDate());
-                    detailDTO.setDurationMinutes(appointment.getDurationMinutes());
-                    detailDTO.setStatus(appointment.getStatus());
-                    detailDTO.setNotes(appointment.getNotes());
-                    detailDTO.setReason(appointment.getReason());
-                    
-                    detailDTO.setPatientName("Current Patient");
+            .stream()
+            .map(appointment -> {
+                AppointmentDetailDTO detailDTO = new AppointmentDetailDTO();
+                detailDTO.setId(appointment.getId());
+                detailDTO.setPatientId(appointment.getPatientId());
+                detailDTO.setDoctorId(appointment.getDoctorId());
+                detailDTO.setAppointmentDate(appointment.getAppointmentDate());
+                detailDTO.setDurationMinutes(appointment.getDurationMinutes());
+                detailDTO.setStatus(appointment.getStatus());
+                detailDTO.setNotes(appointment.getNotes());
+                detailDTO.setReason(appointment.getReason());
+
+                if (finalPatientDetails != null) {
+                    detailDTO.setPatientName(finalPatientDetails.get("name") + " " + finalPatientDetails.get("surname"));
+                    detailDTO.setPatientEmail((String) finalPatientDetails.get("email"));
+                } else {
+                    detailDTO.setPatientName("Patient not found");
                     detailDTO.setPatientEmail("N/A");
-                    
-                    try {
-                        Map<String, Object> doctor = doctorServiceClient.getDoctorById(appointment.getDoctorId());
-                        detailDTO.setDoctorName(doctor.get("name") + " " + doctor.get("surname"));
-                        detailDTO.setDoctorSpecialization((String) doctor.get("specialization"));
-                    } catch (Exception e) {
-                        detailDTO.setDoctorName("Doctor not found");
-                        detailDTO.setDoctorSpecialization("N/A");
-                    }
-                    
-                    return detailDTO;
-                })
-                .collect(Collectors.toList());
+                }
+
+                try {
+                    Map<String, Object> doctor = doctorServiceClient.getDoctorById(appointment.getDoctorId());
+                    detailDTO.setDoctorName(doctor.get("name") + " " + doctor.get("surname"));
+                    detailDTO.setDoctorSpecialization((String) doctor.get("specialization"));
+                } catch (Exception e) {
+                    detailDTO.setDoctorName("Doctor not found");
+                    detailDTO.setDoctorSpecialization("N/A");
+                }
+
+                return detailDTO;
+            })
+            .collect(Collectors.toList());
     }
     
     private AppointmentDTO toDTO(Appointment appointment) {
