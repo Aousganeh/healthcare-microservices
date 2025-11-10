@@ -93,7 +93,6 @@ export const Navbar = () => {
       ? [{ to: "/admin/dashboard", label: "Admin" }]
       : isDoctor
       ? [
-          { to: "/booking", label: "Book Appointment" },
           { to: "/doctor/dashboard", label: "Dashboard" },
         ]
       : [
