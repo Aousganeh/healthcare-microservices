@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -47,5 +48,11 @@ public class DoctorDTO {
     private Integer yearsOfExperience;
     
     private String qualifications;
+    
+    private LocalTime workingHoursStart;
+    
+    private LocalTime workingHoursEnd;
+    
+    private String workingDays; // Comma-separated: MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY
 }
 

@@ -2,6 +2,8 @@ package com.healthcare.appointment.controller;
 
 import com.healthcare.appointment.dto.AppointmentDTO;
 import com.healthcare.appointment.dto.AppointmentDetailDTO;
+import com.healthcare.appointment.dto.RescheduleRequest;
+import com.healthcare.appointment.dto.TimeSlotDTO;
 import com.healthcare.appointment.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -86,5 +89,22 @@ public class AppointmentController {
     @GetMapping("/patient/{patientId}/details")
     public ResponseEntity<List<AppointmentDetailDTO>> getAppointmentDetailsByPatientId(@PathVariable Integer patientId) {
         return ResponseEntity.ok(appointmentService.getAppointmentDetailsByPatientId(patientId));
+    }
+    
+    @Operation(summary = "Reschedule appointment", description = "Reschedules an appointment to a new date and time")
+    @PatchMapping("/{id}/reschedule")
+    public ResponseEntity<AppointmentDTO> rescheduleAppointment(
+            @PathVariable Integer id,
+            @Valid @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(appointmentService.rescheduleAppointment(id, request));
+    }
+    
+    @Operation(summary = "Get available time slots", description = "Retrieves available 30-minute time slots for a doctor on a specific date")
+    @GetMapping("/doctors/{doctorId}/available-slots")
+    public ResponseEntity<List<TimeSlotDTO>> getAvailableTimeSlots(
+            @PathVariable Integer doctorId,
+            @RequestParam LocalDate date,
+            @RequestParam(required = false) Integer excludeAppointmentId) {
+        return ResponseEntity.ok(appointmentService.getAvailableTimeSlots(doctorId, date, excludeAppointmentId));
     }
 }

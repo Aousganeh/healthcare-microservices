@@ -57,6 +57,9 @@ public class DoctorService {
         doctor.setDutyStatus(doctorDTO.getDutyStatus());
         doctor.setYearsOfExperience(doctorDTO.getYearsOfExperience());
         doctor.setQualifications(doctorDTO.getQualifications());
+        doctor.setWorkingHoursStart(doctorDTO.getWorkingHoursStart());
+        doctor.setWorkingHoursEnd(doctorDTO.getWorkingHoursEnd());
+        doctor.setWorkingDays(doctorDTO.getWorkingDays());
         
         doctor = doctorRepository.save(doctor);
         return toDTO(doctor);
@@ -105,6 +108,9 @@ public class DoctorService {
         dto.setDutyStatus(doctor.getDutyStatus());
         dto.setYearsOfExperience(doctor.getYearsOfExperience());
         dto.setQualifications(doctor.getQualifications());
+        dto.setWorkingHoursStart(doctor.getWorkingHoursStart());
+        dto.setWorkingHoursEnd(doctor.getWorkingHoursEnd());
+        dto.setWorkingDays(doctor.getWorkingDays());
         return dto;
     }
     
@@ -122,6 +128,9 @@ public class DoctorService {
         doctor.setDutyStatus(dto.getDutyStatus());
         doctor.setYearsOfExperience(dto.getYearsOfExperience());
         doctor.setQualifications(dto.getQualifications());
+        doctor.setWorkingHoursStart(dto.getWorkingHoursStart());
+        doctor.setWorkingHoursEnd(dto.getWorkingHoursEnd());
+        doctor.setWorkingDays(dto.getWorkingDays());
         return doctor;
     }
 }

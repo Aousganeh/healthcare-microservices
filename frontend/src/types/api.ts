@@ -9,6 +9,9 @@ export interface Doctor {
   email?: string;
   phoneNumber?: string;
   qualifications?: string;
+  workingHoursStart?: string; // HH:mm format
+  workingHoursEnd?: string; // HH:mm format
+  workingDays?: string; // Comma-separated: MONDAY,TUESDAY,...
 }
 
 export interface Patient {
@@ -48,6 +51,7 @@ export interface Appointment {
 }
 
 export interface AppointmentDetail extends Appointment {
+  doctorId: number;
   doctorName?: string;
   doctorSpecialization?: string;
   patientName?: string;

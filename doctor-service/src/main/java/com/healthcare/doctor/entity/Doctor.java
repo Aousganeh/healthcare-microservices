@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "doctors")
@@ -49,5 +50,14 @@ public class Doctor extends BaseAuditableEntity {
     
     @Column(columnDefinition = "TEXT")
     private String qualifications;
+    
+    @Column(name = "working_hours_start")
+    private LocalTime workingHoursStart;
+    
+    @Column(name = "working_hours_end")
+    private LocalTime workingHoursEnd;
+    
+    @Column(name = "working_days", length = 20)
+    private String workingDays; // Comma-separated: MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY
 }
 

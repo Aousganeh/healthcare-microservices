@@ -91,3 +91,30 @@ export function getPatientByEmail(email: string) {
   return request<Patient>(`${API_BASE}/patients/email/${encodeURIComponent(email)}`);
 }
 
+export interface RescheduleRequest {
+  newAppointmentDate: string; // ISO string
+  durationMinutes?: number;
+}
+
+export function rescheduleAppointment(appointmentId: number, request: RescheduleRequest) {
+  return request<Appointment>(`${API_BASE}/appointments/${appointmentId}/reschedule`, {
+    method: "PATCH",
+    body: JSON.stringify(request),
+  });
+}
+
+export interface TimeSlot {
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  available: boolean;
+  displayTime: string; // e.g., "10:00", "10:30"
+}
+
+export function getAvailableTimeSlots(doctorId: number, date: string, excludeAppointmentId?: number) {
+  const params = new URLSearchParams({ date });
+  if (excludeAppointmentId) {
+    params.append("excludeAppointmentId", excludeAppointmentId.toString());
+  }
+  return request<TimeSlot[]>(`${API_BASE}/appointments/doctors/${doctorId}/available-slots?${params.toString()}`);
+}
+

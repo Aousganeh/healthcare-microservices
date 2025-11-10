@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Download, FileText, Loader2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HealthMetrics } from "@/components/dashboard/HealthMetrics";
 import { PrescriptionList } from "@/components/dashboard/PrescriptionList";
+import { RescheduleDialog } from "@/components/RescheduleDialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,9 @@ import type { AppointmentDetail, Doctor } from "@/types/api";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetail | null>(null);
 
   // Get patient by user's email
   const {
@@ -172,7 +176,14 @@ const Dashboard = () => {
                                   {appointment.status && <Badge variant="outline">{appointment.status}</Badge>}
                                 </div>
                               </div>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedAppointment(appointment);
+                                  setRescheduleDialogOpen(true);
+                                }}
+                              >
                                 Reschedule
                               </Button>
                             </div>
@@ -241,6 +252,17 @@ const Dashboard = () => {
       </main>
 
       <Footer />
+
+      {selectedAppointment && (
+        <RescheduleDialog
+          appointment={selectedAppointment}
+          open={rescheduleDialogOpen}
+          onOpenChange={setRescheduleDialogOpen}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["appointments", "patient", patientId] });
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { format, setHours, setMinutes } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TimeSlotPicker } from "@/components/TimeSlotPicker";
 
 import type { AppointmentPayload, Doctor } from "@/types/api";
+import type { TimeSlot } from "@/lib/api";
 
 interface AppointmentFormProps {
   doctor?: Doctor;
@@ -22,7 +23,7 @@ interface AppointmentFormProps {
 
 export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentFormProps) => {
   const [date, setDate] = useState<Date>();
-  const [time, setTime] = useState<string>("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,18 +36,16 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
       return;
     }
 
-    if (!date || !time) {
-      toast.error("Please choose a date and time.");
+    if (!date || !selectedTimeSlot) {
+      toast.error("Please choose a date and time slot.");
       return;
     }
-
-    const [hours, minutes] = time.split(":").map(Number);
-    const appointmentDate = setMinutes(setHours(date, hours ?? 0), minutes ?? 0);
 
     const payload: AppointmentPayload = {
       doctorId: doctor.id,
       patientId,
-      appointmentDate: appointmentDate.toISOString(),
+      appointmentDate: selectedTimeSlot.startTime,
+      durationMinutes: 30,
       reason,
       notes,
     };
@@ -58,7 +57,7 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
       setReason("");
       setNotes("");
       setDate(undefined);
-      setTime("");
+      setSelectedTimeSlot(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to book appointment");
     } finally {
@@ -79,44 +78,41 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Appointment Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    disabled={(currentDate) => currentDate < new Date()}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="time">Appointment Time</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="time"
-                  type="time"
-                  value={time}
-                  onChange={(event) => setTime(event.target.value)}
-                  className="pl-10"
-                  required
+          <div className="space-y-2">
+            <Label>Appointment Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => {
+                    setDate(newDate);
+                    setSelectedTimeSlot(null); // Reset time slot when date changes
+                  }}
+                  initialFocus
+                  disabled={(currentDate) => currentDate < new Date()}
+                  className="pointer-events-auto"
                 />
-              </div>
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
+
+          {date && doctor && (
+            <div className="space-y-2">
+              <TimeSlotPicker
+                doctorId={doctor.id}
+                date={date}
+                selectedTime={selectedTimeSlot?.startTime || null}
+                onTimeSelect={setSelectedTimeSlot}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="reason">Reason for Visit</Label>

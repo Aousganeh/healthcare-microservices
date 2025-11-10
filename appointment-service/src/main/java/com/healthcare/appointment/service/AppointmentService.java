@@ -2,6 +2,8 @@ package com.healthcare.appointment.service;
 
 import com.healthcare.appointment.dto.AppointmentDTO;
 import com.healthcare.appointment.dto.AppointmentDetailDTO;
+import com.healthcare.appointment.dto.RescheduleRequest;
+import com.healthcare.appointment.dto.TimeSlotDTO;
 import com.healthcare.appointment.entity.Appointment;
 import com.healthcare.appointment.enums.AppointmentStatus;
 import com.healthcare.appointment.feign.DoctorServiceClient;
@@ -11,7 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -200,6 +208,129 @@ public class AppointmentService {
                 return detailDTO;
             })
             .collect(Collectors.toList());
+    }
+    
+    public AppointmentDTO rescheduleAppointment(Integer id, RescheduleRequest request) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+        
+        // Validate new date is in the future
+        if (request.getNewAppointmentDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("New appointment date must be in the future");
+        }
+        
+        appointment.setAppointmentDate(request.getNewAppointmentDate());
+        if (request.getDurationMinutes() != null) {
+            appointment.setDurationMinutes(request.getDurationMinutes());
+        }
+        // Reset status to SCHEDULED when rescheduling
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
+        
+        appointment = appointmentRepository.save(appointment);
+        return toDTO(appointment);
+    }
+    
+    public List<TimeSlotDTO> getAvailableTimeSlots(Integer doctorId, LocalDate date, Integer excludeAppointmentId) {
+        // Get doctor information
+        Map<String, Object> doctor = doctorServiceClient.getDoctorById(doctorId);
+        
+        // Default working hours if not set
+        LocalTime startTime = LocalTime.of(9, 0); // 9:00 AM
+        LocalTime endTime = LocalTime.of(17, 0); // 5:00 PM
+        
+        try {
+            if (doctor.get("workingHoursStart") != null) {
+                Object startObj = doctor.get("workingHoursStart");
+                if (startObj instanceof String) {
+                    startTime = LocalTime.parse((String) startObj);
+                } else if (startObj instanceof Map) {
+                    // If it's a JSON object with hour and minute
+                    Map<String, Object> timeMap = (Map<String, Object>) startObj;
+                    Integer hour = (Integer) timeMap.get("hour");
+                    Integer minute = (Integer) timeMap.get("minute");
+                    if (hour != null && minute != null) {
+                        startTime = LocalTime.of(hour, minute);
+                    }
+                }
+            }
+            if (doctor.get("workingHoursEnd") != null) {
+                Object endObj = doctor.get("workingHoursEnd");
+                if (endObj instanceof String) {
+                    endTime = LocalTime.parse((String) endObj);
+                } else if (endObj instanceof Map) {
+                    // If it's a JSON object with hour and minute
+                    Map<String, Object> timeMap = (Map<String, Object>) endObj;
+                    Integer hour = (Integer) timeMap.get("hour");
+                    Integer minute = (Integer) timeMap.get("minute");
+                    if (hour != null && minute != null) {
+                        endTime = LocalTime.of(hour, minute);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Use defaults if parsing fails
+        }
+        
+        // Check if doctor works on this day
+        String workingDays = (String) doctor.get("workingDays");
+        if (workingDays != null && !workingDays.isEmpty()) {
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            List<String> days = Arrays.asList(workingDays.split(","));
+            if (!days.contains(dayOfWeek.name())) {
+                return new ArrayList<>(); // Doctor doesn't work on this day
+            }
+        }
+        
+        // Get existing appointments for this doctor on this date
+        List<Appointment> existingAppointments = appointmentRepository.findByDoctorId(doctorId).stream()
+                .filter(apt -> {
+                    LocalDate aptDate = apt.getAppointmentDate().toLocalDate();
+                    return aptDate.equals(date) && 
+                           !apt.getStatus().equals(AppointmentStatus.CANCELLED) &&
+                           (excludeAppointmentId == null || !apt.getId().equals(excludeAppointmentId));
+                })
+                .collect(Collectors.toList());
+        
+        // Generate 30-minute time slots
+        List<TimeSlotDTO> slots = new ArrayList<>();
+        LocalDateTime slotStart = LocalDateTime.of(date, startTime);
+        LocalDateTime slotEnd = slotStart.plusMinutes(30);
+        LocalDateTime dayEnd = LocalDateTime.of(date, endTime);
+        
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        
+        while (slotEnd.isBefore(dayEnd) || slotEnd.isEqual(dayEnd)) {
+            TimeSlotDTO slot = new TimeSlotDTO();
+            slot.setStartTime(slotStart);
+            slot.setEndTime(slotEnd);
+            slot.setDisplayTime(slotStart.toLocalTime().format(timeFormatter));
+            
+            // Check if this slot conflicts with existing appointments
+            boolean isAvailable = true;
+            for (Appointment apt : existingAppointments) {
+                LocalDateTime aptStart = apt.getAppointmentDate();
+                LocalDateTime aptEnd = aptStart.plusMinutes(apt.getDurationMinutes() != null ? apt.getDurationMinutes() : 30);
+                
+                // Check for overlap
+                if (slotStart.isBefore(aptEnd) && slotEnd.isAfter(aptStart)) {
+                    isAvailable = false;
+                    break;
+                }
+            }
+            
+            // Don't show past slots
+            if (slotStart.isBefore(LocalDateTime.now())) {
+                isAvailable = false;
+            }
+            
+            slot.setAvailable(isAvailable);
+            slots.add(slot);
+            
+            slotStart = slotStart.plusMinutes(30);
+            slotEnd = slotEnd.plusMinutes(30);
+        }
+        
+        return slots;
     }
     
     private AppointmentDTO toDTO(Appointment appointment) {

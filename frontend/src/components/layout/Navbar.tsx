@@ -91,7 +91,7 @@ export const Navbar = () => {
                 </Button>
                 <Button variant="hero" size="sm" asChild className="hidden md:inline-flex">
                   <Link to="/register">Sign Up</Link>
-                </Button>
+            </Button>
               </>
             )}
 
@@ -141,7 +141,7 @@ export const Navbar = () => {
                   </Button>
                   <Button variant="hero" className="mt-2" asChild onClick={() => setIsMenuOpen(false)}>
                     <Link to="/register">Sign Up</Link>
-                  </Button>
+              </Button>
                 </>
               )}
             </div>
