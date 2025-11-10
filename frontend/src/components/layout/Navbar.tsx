@@ -1,15 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X, Activity, LogOut, User, Shield } from "lucide-react";
 import { NavLink } from "@/components/navigation/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { getDoctors, getPatientByEmail } from "@/lib/api";
+import type { Doctor } from "@/types/api";
 
 export const Navbar = () => {
   const { isAuthenticated, user, logout, isAdmin, isDoctor } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const {
+    data: doctors = [],
+  } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: getDoctors,
+    enabled: isDoctor,
+  });
+
+  const {
+    data: patient,
+  } = useQuery({
+    queryKey: ["patient", "email", user?.email],
+    queryFn: () => getPatientByEmail(user!.email!),
+    enabled: !isDoctor && !!user?.email,
+    retry: false,
+  });
+
+  const doctor = useMemo(() => {
+    if (!isDoctor || !user?.email) return null;
+    return doctors.find((d: Doctor) => d.email === user.email);
+  }, [doctors, user?.email, isDoctor]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +48,42 @@ export const Navbar = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
   };
+
+  const getUserDisplayName = () => {
+    if (!user?.firstName) {
+      return user?.username || "User";
+    }
+    if (isDoctor) {
+      return `Dr. ${user.firstName}`;
+    }
+    const gender = doctor?.gender || patient?.gender || "MALE";
+    const prefix = gender === "FEMALE" ? "Ms." : "Mr.";
+    return `${prefix} ${user.firstName}`;
+  };
+
+  const getUserPhoto = () => {
+    if (isDoctor && doctor?.photoUrl) {
+      return doctor.photoUrl;
+    }
+    return null;
+  };
+
+  const getUserInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+    }
+    if (user?.firstName) {
+      return user.firstName.charAt(0).toUpperCase();
+    }
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
+
+  const displayName = getUserDisplayName();
+  const userPhoto = getUserPhoto();
+  const userInitials = getUserInitials();
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -92,8 +153,27 @@ export const Navbar = () => {
                   className="hidden md:inline-flex"
                 >
                   <Link to="/profile" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{user?.username}</span>
+                    {userPhoto ? (
+                      <img
+                        src={userPhoto}
+                        alt={displayName}
+                        className="h-6 w-6 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) {
+                            fallback.style.display = "flex";
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`h-6 w-6 rounded-full bg-gradient-primary flex items-center justify-center text-white text-xs font-bold ${userPhoto ? "hidden" : ""}`}
+                    >
+                      {userInitials}
+                    </div>
+                    <span>{displayName}</span>
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" onClick={logout} className="hidden md:inline-flex">
@@ -149,8 +229,27 @@ export const Navbar = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <Link to="/profile" className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{user?.username}</span>
+                      {userPhoto ? (
+                        <img
+                          src={userPhoto}
+                          alt={displayName}
+                          className="h-6 w-6 rounded-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = "flex";
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className={`h-6 w-6 rounded-full bg-gradient-primary flex items-center justify-center text-white text-xs font-bold ${userPhoto ? "hidden" : ""}`}
+                      >
+                        {userInitials}
+                      </div>
+                      <span>{displayName}</span>
                     </Link>
                   </Button>
                   <Button variant="outline" className="mt-2" onClick={() => { logout(); setIsMenuOpen(false); }}>

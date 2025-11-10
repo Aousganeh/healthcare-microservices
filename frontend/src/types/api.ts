@@ -14,6 +14,8 @@ export interface Doctor {
   workingDays?: string;
   photoUrl?: string;
   licenseNumber?: string;
+  gender?: string;
+  dateOfBirth?: string;
 }
 
 export interface Patient {
