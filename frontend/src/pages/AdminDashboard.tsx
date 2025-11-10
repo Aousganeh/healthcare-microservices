@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Shield, User as UserIcon, UserCheck, UserX, Search, Filter } from "lucide-react";
+import { Loader2, Shield, User as UserIcon, Search, Filter, Settings } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAllUsers, updateUserRole, addRoleToUser, type User } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getAllUsers, updateUserRole, type User } from "@/lib/api";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const {
@@ -30,22 +41,12 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success("User role updated successfully");
+      setIsDialogOpen(false);
+      setSelectedUser(null);
+      setSelectedRole("");
     },
     onError: (error: Error) => {
       toast.error("Failed to update user role", {
-        description: error.message,
-      });
-    },
-  });
-
-  const addRoleMutation = useMutation({
-    mutationFn: ({ email, role }: { email: string; role: string }) => addRoleToUser(email, role),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Role added successfully");
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to add role", {
         description: error.message,
       });
     },
@@ -64,16 +65,18 @@ const AdminDashboard = () => {
 
   const uniqueRoles = Array.from(new Set(users.flatMap((user: User) => user.roles))).sort();
 
-  const handleMakeDoctor = (user: User) => {
-    updateRoleMutation.mutate({ email: user.email, role: "ROLE_DOCTOR" });
+  const availableRoles = ["ROLE_USER", "ROLE_DOCTOR", "ROLE_ADMIN"];
+
+  const handleOpenDialog = (user: User) => {
+    setSelectedUser(user);
+    setSelectedRole(user.roles[0] || "ROLE_USER");
+    setIsDialogOpen(true);
   };
 
-  const handleMakeAdmin = (user: User) => {
-    addRoleMutation.mutate({ email: user.email, role: "ROLE_ADMIN" });
-  };
-
-  const handleMakeUser = (user: User) => {
-    updateRoleMutation.mutate({ email: user.email, role: "ROLE_USER" });
+  const handleChangeRole = () => {
+    if (selectedUser && selectedRole) {
+      updateRoleMutation.mutate({ email: selectedUser.email, role: selectedRole });
+    }
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -159,41 +162,15 @@ const AdminDashboard = () => {
                             ))}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2">
-                          {!user.roles.includes("ROLE_DOCTOR") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleMakeDoctor(user)}
-                              disabled={updateRoleMutation.isPending}
-                            >
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Make Doctor
-                            </Button>
-                          )}
-                          {!user.roles.includes("ROLE_ADMIN") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleMakeAdmin(user)}
-                              disabled={addRoleMutation.isPending}
-                            >
-                              <Shield className="h-4 w-4 mr-2" />
-                              Make Admin
-                            </Button>
-                          )}
-                          {user.roles.some((r) => r !== "ROLE_USER") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleMakeUser(user)}
-                              disabled={updateRoleMutation.isPending}
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Make User
-                            </Button>
-                          )}
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenDialog(user)}
+                          disabled={updateRoleMutation.isPending}
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Change Role
+                        </Button>
                       </div>
                     </CardHeader>
                   </Card>
@@ -219,6 +196,63 @@ const AdminDashboard = () => {
       </main>
 
       <Footer />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change User Role</DialogTitle>
+            <DialogDescription>
+              Select a new role for {selectedUser?.firstName && selectedUser?.lastName
+                ? `${selectedUser.firstName} ${selectedUser.lastName}`
+                : selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role.replace("ROLE_", "")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedUser && (
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Current roles:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedUser.roles.map((role) => (
+                    <Badge key={role} variant={getRoleBadgeVariant(role)}>
+                      {role.replace("ROLE_", "")}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleChangeRole}
+              disabled={updateRoleMutation.isPending || !selectedRole}
+            >
+              {updateRoleMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Role"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

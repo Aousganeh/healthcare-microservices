@@ -28,9 +28,12 @@ export const Navbar = () => {
     { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
     { to: "/doctors", label: "Doctors" },
-    { to: "/booking", label: "Book Appointment" },
-    { to: "/dashboard", label: "Dashboard" },
-    ...(isAdmin ? [{ to: "/admin/dashboard", label: "Admin" }] : []),
+    ...(isAdmin
+      ? [{ to: "/admin/dashboard", label: "Admin" }]
+      : [
+          { to: "/booking", label: "Book Appointment" },
+          { to: "/dashboard", label: "Dashboard" },
+        ]),
   ];
 
   return (
