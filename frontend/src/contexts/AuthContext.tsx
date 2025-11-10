@@ -66,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData: User = {
         username: data.username,
         email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
         roles: data.roles || [],
       };
 
@@ -109,6 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData: User = {
         username: data.username,
         email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
         roles: data.roles || [],
       };
 

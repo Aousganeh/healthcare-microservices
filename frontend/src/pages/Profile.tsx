@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Loader2, User as UserIcon, Mail, Settings } from "lucide-react";
@@ -14,6 +14,7 @@ import type { Doctor } from "@/types/api";
 const Profile = () => {
   const { user, isDoctor } = useAuth();
   const navigate = useNavigate();
+  const hasNavigatedRef = useRef(false);
 
   const {
     data: doctors = [],
@@ -30,7 +31,8 @@ const Profile = () => {
   }, [doctors, user?.email, isDoctor]);
 
   useEffect(() => {
-    if (isDoctor && doctor?.id && !isLoadingDoctors) {
+    if (isDoctor && doctor?.id && !isLoadingDoctors && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
       navigate(`/doctors/${doctor.id}`);
     }
   }, [isDoctor, doctor?.id, isLoadingDoctors, navigate]);
