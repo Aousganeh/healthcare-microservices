@@ -10,7 +10,7 @@ spring:
         - id: identity-service
           uri: lb://identity-service
           predicates:
-            - Path=/api/auth/**,/api/oauth2/**
+            - Path=/api/auth/**
           filters:
             - StripPrefix=1
         - id: patient-service
