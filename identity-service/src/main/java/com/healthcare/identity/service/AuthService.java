@@ -48,13 +48,13 @@ public class AuthService {
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
 
-        Role userRole = roleRepository.findByName("ROLE_USER")
+        Role patientRole = roleRepository.findByName("ROLE_PATIENT")
                 .orElseGet(() -> {
                     Role role = new Role();
-                    role.setName("ROLE_USER");
+                    role.setName("ROLE_PATIENT");
                     return roleRepository.save(role);
                 });
-        user.getRoles().add(userRole);
+        user.getRoles().add(patientRole);
 
         user = userRepository.save(user);
         return generateAuthResponse(user);

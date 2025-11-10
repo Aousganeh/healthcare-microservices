@@ -12,7 +12,7 @@ const testimonials = [
   },
   {
     name: "Michael Chen",
-    role: "Regular User",
+    role: "Patient",
     content: "The telemedicine feature is a game-changer. I can consult with specialists without leaving home. Highly recommend!",
     rating: 5,
   },

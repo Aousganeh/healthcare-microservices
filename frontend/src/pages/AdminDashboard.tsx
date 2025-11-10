@@ -65,11 +65,11 @@ const AdminDashboard = () => {
 
   const uniqueRoles = Array.from(new Set(users.flatMap((user: User) => user.roles))).sort();
 
-  const availableRoles = ["ROLE_USER", "ROLE_DOCTOR", "ROLE_ADMIN"];
+  const availableRoles = ["ROLE_PATIENT", "ROLE_DOCTOR", "ROLE_ADMIN"];
 
   const handleOpenDialog = (user: User) => {
     setSelectedUser(user);
-    setSelectedRole(user.roles[0] || "ROLE_USER");
+    setSelectedRole(user.roles[0] || "ROLE_PATIENT");
     setIsDialogOpen(true);
   };
 

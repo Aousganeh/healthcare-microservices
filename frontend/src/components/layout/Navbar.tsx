@@ -51,7 +51,7 @@ export const Navbar = () => {
 
   const getUserDisplayName = () => {
     if (!user?.firstName) {
-      return user?.username || "User";
+      return user?.username || "Patient";
     }
     if (isDoctor) {
       return `Dr. ${user.firstName}`;
@@ -78,7 +78,7 @@ export const Navbar = () => {
     if (user?.username) {
       return user.username.charAt(0).toUpperCase();
     }
-    return "U";
+    return "P";
   };
 
   const displayName = getUserDisplayName();
