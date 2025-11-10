@@ -99,8 +99,18 @@ const DoctorProfile = () => {
   const specialization = doctor.specialization ?? "General Practice";
   const isOwnProfile = isDoctor && user?.email === doctor.email;
 
+  const formatTimeForInput = (time?: string) => {
+    if (!time) return "09:00";
+    return time.substring(0, 5);
+  };
+
   const updateDoctorMutation = useMutation({
-    mutationFn: (data: Partial<Doctor>) => updateDoctor(doctor.id!, data),
+    mutationFn: (data: Partial<Doctor>) => {
+      if (!doctor?.id) {
+        throw new Error("Doctor ID is required");
+      }
+      return updateDoctor(doctor.id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctor", id] });
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
@@ -115,8 +125,8 @@ const DoctorProfile = () => {
   });
 
   const handleOpenSettings = () => {
-    setWorkingHoursStart(doctor.workingHoursStart || "09:00");
-    setWorkingHoursEnd(doctor.workingHoursEnd || "17:00");
+    setWorkingHoursStart(formatTimeForInput(doctor.workingHoursStart));
+    setWorkingHoursEnd(formatTimeForInput(doctor.workingHoursEnd));
     setWorkingDays(doctor.workingDays || "");
     setIsSettingsOpen(true);
   };
@@ -254,7 +264,7 @@ const DoctorProfile = () => {
                           <div>
                             <p className="text-sm text-muted-foreground">Working Hours</p>
                             <p className="font-medium">
-                              {doctor.workingHoursStart} - {doctor.workingHoursEnd}
+                              {formatTimeForInput(doctor.workingHoursStart)} - {formatTimeForInput(doctor.workingHoursEnd)}
                             </p>
                           </div>
                         </div>
