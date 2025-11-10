@@ -22,7 +22,7 @@ spring:
         - id: doctor-service
           uri: lb://doctor-service
           predicates:
-            - Path=/api/doctors/**
+            - Path=/api/doctors/**,/api/specializations/**
           filters:
             - StripPrefix=1
         - id: appointment-service

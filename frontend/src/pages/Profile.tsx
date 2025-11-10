@@ -18,7 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { WorkingDaysSelector } from "@/components/WorkingDaysSelector";
-import { getDoctors, updateDoctor } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getDoctors, updateDoctor, getActiveSpecializations } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatWorkingDays, parseWorkingDays, DAYS_OF_WEEK } from "@/utils/workingDays";
 import type { Doctor } from "@/types/api";
@@ -38,6 +39,14 @@ const Profile = () => {
     enabled: isDoctor,
   });
 
+  const {
+    data: specializations = [],
+  } = useQuery({
+    queryKey: ["specializations", "active"],
+    queryFn: getActiveSpecializations,
+    enabled: isDoctor,
+  });
+
   const doctor = useMemo(() => {
     if (!isDoctor) return null;
     return doctors.find((d: Doctor) => d.email === user?.email);
@@ -46,7 +55,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
-    specialization: "",
+    specializationId: 0,
     department: "",
     phoneNumber: "",
     qualifications: "",
@@ -86,7 +95,7 @@ const Profile = () => {
       setFormData({
         name: doctor.name || "",
         surname: doctor.surname || "",
-        specialization: doctor.specialization || "",
+        specializationId: doctor.specializationId || 0,
         department: doctor.department || "",
         phoneNumber: doctor.phoneNumber || "",
         qualifications: doctor.qualifications || "",
@@ -105,7 +114,7 @@ const Profile = () => {
       updateDoctorMutation.mutate({
         name: formData.name,
         surname: formData.surname,
-        specialization: formData.specialization,
+        specializationId: formData.specializationId,
         licenseNumber: doctor.licenseNumber,
         email: doctor.email,
         phoneNumber: formData.phoneNumber,
@@ -426,16 +435,25 @@ const Profile = () => {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="specialization">Specialization *</Label>
+                <Select
+                  value={formData.specializationId.toString()}
+                  onValueChange={(value) => setFormData({ ...formData, specializationId: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a specialization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specializations.map((spec) => (
+                      <SelectItem key={spec.id} value={spec.id.toString()}>
+                        {spec.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization *</Label>
-                  <Input
-                    id="specialization"
-                    value={formData.specialization}
-                    onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                    required
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
                   <Input
@@ -531,7 +549,7 @@ const Profile = () => {
                   updateDoctorMutation.isPending || 
                   !formData.name || 
                   !formData.surname || 
-                  !formData.specialization || 
+                  !formData.specializationId || 
                   (formData.workingDays && formData.workingDays.trim() !== "" && (!formData.workingHoursStart || !formData.workingHoursEnd))
                 }
               >

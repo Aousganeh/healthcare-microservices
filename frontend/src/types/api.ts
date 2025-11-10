@@ -1,8 +1,17 @@
+export interface Specialization {
+  id: number;
+  name: string;
+  description?: string;
+  active?: boolean;
+}
+
 export interface Doctor {
   id?: number;
   name: string;
   surname: string;
-  specialization: string;
+  specializationId?: number;
+  specializationName?: string;
+  specialization?: string;
   department?: string;
   dutyStatus?: string;
   yearsOfExperience?: number;

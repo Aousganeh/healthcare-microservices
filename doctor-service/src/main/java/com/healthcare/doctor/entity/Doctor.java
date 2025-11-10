@@ -35,8 +35,9 @@ public class Doctor extends BaseAuditableEntity {
     @Column(name = "license_number", unique = true)
     private String licenseNumber;
     
-    @Column(name = "specialization")
-    private String specialization;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "specialization_id", nullable = false)
+    private Specialization specialization;
     
     @Column(name = "department")
     private String department;

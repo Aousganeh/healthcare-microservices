@@ -1,6 +1,7 @@
 package com.healthcare.doctor.repository;
 
 import com.healthcare.doctor.entity.Doctor;
+import com.healthcare.doctor.entity.Specialization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +16,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
     
     Optional<Doctor> findByLicenseNumber(String licenseNumber);
     
-    List<Doctor> findBySpecialization(String specialization);
+    List<Doctor> findBySpecialization(Specialization specialization);
     
     List<Doctor> findByDepartment(String department);
     

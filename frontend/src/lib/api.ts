@@ -6,6 +6,7 @@ import type {
   HealthMetric,
   Patient,
   Prescription,
+  Specialization,
 } from "@/types/api";
 
 const API_BASE = "/api";
@@ -205,6 +206,38 @@ export function addRoleToUser(email: string, role: string) {
   return request<{ email: string; roles: string[] }>(`${API_BASE}/auth/users/${encodeURIComponent(email)}/role`, {
     method: "POST",
     body: JSON.stringify({ role }),
+  });
+}
+
+export function getSpecializations() {
+  return request<Specialization[]>(`${API_BASE}/specializations`);
+}
+
+export function getActiveSpecializations() {
+  return request<Specialization[]>(`${API_BASE}/specializations/active`);
+}
+
+export function getSpecialization(id: number) {
+  return request<Specialization>(`${API_BASE}/specializations/${id}`);
+}
+
+export function createSpecialization(specialization: Partial<Specialization>) {
+  return request<Specialization>(`${API_BASE}/specializations`, {
+    method: "POST",
+    body: JSON.stringify(specialization),
+  });
+}
+
+export function updateSpecialization(id: number, specialization: Partial<Specialization>) {
+  return request<Specialization>(`${API_BASE}/specializations/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(specialization),
+  });
+}
+
+export function deleteSpecialization(id: number) {
+  return request<void>(`${API_BASE}/specializations/${id}`, {
+    method: "DELETE",
   });
 }
 

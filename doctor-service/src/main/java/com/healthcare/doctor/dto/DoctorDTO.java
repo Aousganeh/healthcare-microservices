@@ -36,8 +36,10 @@ public class DoctorDTO {
     @NotBlank(message = "License number is required")
     private String licenseNumber;
     
-    @NotBlank(message = "Specialization is required")
-    private String specialization;
+    @NotNull(message = "Specialization is required")
+    private Integer specializationId;
+    
+    private String specializationName;
     
     private String department;
     

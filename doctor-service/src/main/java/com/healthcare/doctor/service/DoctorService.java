@@ -2,7 +2,9 @@ package com.healthcare.doctor.service;
 
 import com.healthcare.doctor.dto.DoctorDTO;
 import com.healthcare.doctor.entity.Doctor;
+import com.healthcare.doctor.entity.Specialization;
 import com.healthcare.doctor.repository.DoctorRepository;
+import com.healthcare.doctor.repository.SpecializationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class DoctorService {
     private final DoctorRepository doctorRepository;
+    private final SpecializationRepository specializationRepository;
     
     public List<DoctorDTO> getAllDoctors() {
         return doctorRepository.findAll().stream()
@@ -42,7 +45,11 @@ public class DoctorService {
             throw new RuntimeException("Doctor with license number already exists: " + doctorDTO.getLicenseNumber());
         }
         
+        Specialization specialization = specializationRepository.findById(doctorDTO.getSpecializationId())
+                .orElseThrow(() -> new RuntimeException("Specialization not found with id: " + doctorDTO.getSpecializationId()));
+        
         Doctor doctor = toEntity(doctorDTO);
+        doctor.setSpecialization(specialization);
         doctor = doctorRepository.save(doctor);
         return toDTO(doctor);
     }
@@ -51,6 +58,9 @@ public class DoctorService {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
         
+        Specialization specialization = specializationRepository.findById(doctorDTO.getSpecializationId())
+                .orElseThrow(() -> new RuntimeException("Specialization not found with id: " + doctorDTO.getSpecializationId()));
+        
         doctor.setName(doctorDTO.getName());
         doctor.setSurname(doctorDTO.getSurname());
         doctor.setDateOfBirth(doctorDTO.getDateOfBirth());
@@ -58,7 +68,7 @@ public class DoctorService {
         doctor.setEmail(doctorDTO.getEmail());
         doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
         doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
-        doctor.setSpecialization(doctorDTO.getSpecialization());
+        doctor.setSpecialization(specialization);
         doctor.setDepartment(doctorDTO.getDepartment());
         doctor.setDutyStatus(doctorDTO.getDutyStatus());
         doctor.setYearsOfExperience(doctorDTO.getYearsOfExperience());
@@ -87,7 +97,9 @@ public class DoctorService {
     }
     
     public List<DoctorDTO> getDoctorsBySpecialization(String specialization) {
-        return doctorRepository.findBySpecialization(specialization)
+        Specialization spec = specializationRepository.findByName(specialization)
+                .orElseThrow(() -> new RuntimeException("Specialization not found: " + specialization));
+        return doctorRepository.findBySpecialization(spec)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -110,7 +122,10 @@ public class DoctorService {
         dto.setEmail(doctor.getEmail());
         dto.setPhoneNumber(doctor.getPhoneNumber());
         dto.setLicenseNumber(doctor.getLicenseNumber());
-        dto.setSpecialization(doctor.getSpecialization());
+        if (doctor.getSpecialization() != null) {
+            dto.setSpecializationId(doctor.getSpecialization().getId());
+            dto.setSpecializationName(doctor.getSpecialization().getName());
+        }
         dto.setDepartment(doctor.getDepartment());
         dto.setDutyStatus(doctor.getDutyStatus());
         dto.setYearsOfExperience(doctor.getYearsOfExperience());
@@ -131,7 +146,6 @@ public class DoctorService {
         doctor.setEmail(dto.getEmail());
         doctor.setPhoneNumber(dto.getPhoneNumber());
         doctor.setLicenseNumber(dto.getLicenseNumber());
-        doctor.setSpecialization(dto.getSpecialization());
         doctor.setDepartment(dto.getDepartment());
         doctor.setDutyStatus(dto.getDutyStatus());
         doctor.setYearsOfExperience(dto.getYearsOfExperience());
