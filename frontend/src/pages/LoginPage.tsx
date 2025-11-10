@@ -1,43 +1,11 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Activity, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { Activity } from "lucide-react";
+
+const API_BASE = "/api";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    try {
-      await login(username, password);
-      toast.success("Welcome back!", {
-        description: "You have successfully logged in.",
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again.";
-      setError(errorMessage);
-      toast.error("Login failed", {
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <Card className="w-full max-w-md shadow-large">
@@ -51,58 +19,26 @@ export default function LoginPage() {
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="username">Email or Fincode</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter your email or fincode"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                You can login with your email address or fincode (serial number)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link to="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <Button type="submit" variant="hero" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
+          <div className="space-y-4">
+            <Button
+              type="button"
+              variant="hero"
+              className="w-full"
+              onClick={() => {
+                const params = new URLSearchParams({
+                  client_id: "healthcare-frontend",
+                  response_type: "code",
+                  scope: "openid profile email",
+                  redirect_uri: `${window.location.origin}/oauth2/callback/own`,
+                  state: Math.random().toString(36).substring(7),
+                });
+                window.location.href = `${API_BASE}/oauth2/authorize?${params.toString()}`;
+              }}
+            >
+              <Activity className="mr-2 h-4 w-4" />
+              Sign in with HealthCare+ Account
             </Button>
-          </form>
+          </div>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>

@@ -10,7 +10,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  loginWithToken: (token: string, user: User) => void;
   register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -42,39 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false);
   }, []);
-
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Login failed");
-      }
-
-      const data = await response.json();
-      const userData: User = {
-        username: data.username,
-        email: data.email,
-        roles: data.roles || [],
-      };
-
-      setToken(data.token);
-      setUser(userData);
-      localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("auth_user", JSON.stringify(userData));
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  };
 
   const register = async (
     email: string,
@@ -114,6 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithToken = (token: string, userData: User) => {
+    setToken(token);
+    setUser(userData);
+    localStorage.setItem("auth_token", token);
+    localStorage.setItem("auth_user", JSON.stringify(userData));
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -127,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         token,
-        login,
+        loginWithToken,
         register,
         logout,
         isAuthenticated: !!token && !!user,

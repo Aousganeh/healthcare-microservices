@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import DoctorDashboard from "@/pages/DoctorDashboard";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import OAuthCallback from "@/pages/OAuthCallback";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/services" element={<Services />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/oauth2/callback/own" element={<OAuthCallback />} />
             <Route
               path="/booking"
               element={
