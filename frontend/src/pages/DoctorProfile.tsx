@@ -132,6 +132,7 @@ const DoctorProfile = () => {
   };
 
   const handleSaveSettings = () => {
+    const workingDaysEmpty = !workingDays || workingDays.trim() === "";
     updateDoctorMutation.mutate({
       name: doctor.name,
       surname: doctor.surname,
@@ -143,10 +144,12 @@ const DoctorProfile = () => {
       dutyStatus: doctor.dutyStatus,
       yearsOfExperience: doctor.yearsOfExperience,
       qualifications: doctor.qualifications,
-      workingHoursStart,
-      workingHoursEnd,
+      workingHoursStart: workingDaysEmpty ? "" : workingHoursStart,
+      workingHoursEnd: workingDaysEmpty ? "" : workingHoursEnd,
       workingDays,
       photoUrl: doctor.photoUrl,
+      gender: doctor.gender,
+      dateOfBirth: doctor.dateOfBirth,
     });
   };
 
@@ -366,25 +369,42 @@ const DoctorProfile = () => {
             <div className="space-y-6 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-time">Start Time</Label>
+                  <Label htmlFor="start-time">
+                    Start Time {workingDays && workingDays.trim() !== "" ? "*" : ""}
+                  </Label>
                   <Input
                     id="start-time"
                     type="time"
                     value={workingHoursStart}
                     onChange={(e) => setWorkingHoursStart(e.target.value)}
+                    disabled={!workingDays || workingDays.trim() === ""}
+                    required={workingDays && workingDays.trim() !== ""}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="end-time">End Time</Label>
+                  <Label htmlFor="end-time">
+                    End Time {workingDays && workingDays.trim() !== "" ? "*" : ""}
+                  </Label>
                   <Input
                     id="end-time"
                     type="time"
                     value={workingHoursEnd}
                     onChange={(e) => setWorkingHoursEnd(e.target.value)}
+                    disabled={!workingDays || workingDays.trim() === ""}
+                    required={workingDays && workingDays.trim() !== ""}
                   />
                 </div>
               </div>
-              <WorkingDaysSelector value={workingDays} onChange={setWorkingDays} />
+              <WorkingDaysSelector 
+                value={workingDays} 
+                onChange={(value) => {
+                  setWorkingDays(value);
+                  if (!value || value.trim() === "") {
+                    setWorkingHoursStart("");
+                    setWorkingHoursEnd("");
+                  }
+                }} 
+              />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
@@ -392,7 +412,10 @@ const DoctorProfile = () => {
               </Button>
               <Button
                 onClick={handleSaveSettings}
-                disabled={updateDoctorMutation.isPending || !workingHoursStart || !workingHoursEnd}
+                disabled={
+                  updateDoctorMutation.isPending || 
+                  (workingDays && workingDays.trim() !== "" && (!workingHoursStart || !workingHoursEnd))
+                }
               >
                 {updateDoctorMutation.isPending ? (
                   <>

@@ -101,6 +101,7 @@ const Profile = () => {
 
   const handleSave = () => {
     if (doctor) {
+      const workingDaysEmpty = !formData.workingDays || formData.workingDays.trim() === "";
       updateDoctorMutation.mutate({
         name: formData.name,
         surname: formData.surname,
@@ -112,8 +113,8 @@ const Profile = () => {
         dutyStatus: doctor.dutyStatus,
         yearsOfExperience: doctor.yearsOfExperience,
         qualifications: formData.qualifications,
-        workingHoursStart: formData.workingHoursStart,
-        workingHoursEnd: formData.workingHoursEnd,
+        workingHoursStart: workingDaysEmpty ? "" : formData.workingHoursStart,
+        workingHoursEnd: workingDaysEmpty ? "" : formData.workingHoursEnd,
         workingDays: formData.workingDays,
         photoUrl: formData.photoUrl,
         gender: doctor.gender,
@@ -467,30 +468,46 @@ const Profile = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="workingHoursStart">Working Hours Start *</Label>
+                  <Label htmlFor="workingHoursStart">
+                    Working Hours Start {formData.workingDays && formData.workingDays.trim() !== "" ? "*" : ""}
+                  </Label>
                   <Input
                     id="workingHoursStart"
                     type="time"
                     value={formData.workingHoursStart}
                     onChange={(e) => setFormData({ ...formData, workingHoursStart: e.target.value })}
-                    required
+                    disabled={!formData.workingDays || formData.workingDays.trim() === ""}
+                    required={formData.workingDays && formData.workingDays.trim() !== ""}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="workingHoursEnd">Working Hours End *</Label>
+                  <Label htmlFor="workingHoursEnd">
+                    Working Hours End {formData.workingDays && formData.workingDays.trim() !== "" ? "*" : ""}
+                  </Label>
                   <Input
                     id="workingHoursEnd"
                     type="time"
                     value={formData.workingHoursEnd}
                     onChange={(e) => setFormData({ ...formData, workingHoursEnd: e.target.value })}
-                    required
+                    disabled={!formData.workingDays || formData.workingDays.trim() === ""}
+                    required={formData.workingDays && formData.workingDays.trim() !== ""}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Working Days</Label>
-                <WorkingDaysSelector value={formData.workingDays} onChange={(value) => setFormData({ ...formData, workingDays: value })} />
+                <WorkingDaysSelector 
+                  value={formData.workingDays} 
+                  onChange={(value) => {
+                    const newFormData = { ...formData, workingDays: value };
+                    if (!value || value.trim() === "") {
+                      newFormData.workingHoursStart = "";
+                      newFormData.workingHoursEnd = "";
+                    }
+                    setFormData(newFormData);
+                  }} 
+                />
               </div>
 
               <div className="space-y-2">
@@ -510,7 +527,13 @@ const Profile = () => {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={updateDoctorMutation.isPending || !formData.name || !formData.surname || !formData.specialization || !formData.workingHoursStart || !formData.workingHoursEnd}
+                disabled={
+                  updateDoctorMutation.isPending || 
+                  !formData.name || 
+                  !formData.surname || 
+                  !formData.specialization || 
+                  (formData.workingDays && formData.workingDays.trim() !== "" && (!formData.workingHoursStart || !formData.workingHoursEnd))
+                }
               >
                 {updateDoctorMutation.isPending ? (
                   <>
