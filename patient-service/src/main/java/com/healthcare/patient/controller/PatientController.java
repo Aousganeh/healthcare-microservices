@@ -64,6 +64,12 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getPatientsByRoomId(roomId));
     }
     
+    @Operation(summary = "Get patient by email", description = "Retrieves a patient by their email address")
+    @GetMapping("/email/{email}")
+    public ResponseEntity<PatientDTO> getPatientByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(patientService.getPatientByEmail(email));
+    }
+    
     @Operation(summary = "Get patient's appointments", description = "Retrieves all appointments for this patient (via Appointment Service)")
     @GetMapping("/{id}/appointments")
     public ResponseEntity<?> getPatientAppointments(@PathVariable Integer id) {

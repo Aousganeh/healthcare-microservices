@@ -10,16 +10,33 @@ import type {
 
 const API_BASE = "/api";
 
+function getAuthToken(): string | null {
+  return localStorage.getItem("auth_token");
+}
+
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(init?.headers ?? {}),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(input, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers,
     ...init,
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      // Unauthorized - clear auth and redirect to login
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      window.location.href = "/login";
+    }
     const message = await response.text();
     throw new Error(message || `Request failed with status ${response.status}`);
   }
@@ -68,5 +85,9 @@ export function searchDoctors(query: string) {
 
 export function getDoctorsBySpecialization(specialization: string) {
   return request<Doctor[]>(`${API_BASE}/doctors/specialization/${encodeURIComponent(specialization)}`);
+}
+
+export function getPatientByEmail(email: string) {
+  return request<Patient>(`${API_BASE}/patients/email/${encodeURIComponent(email)}`);
 }
 

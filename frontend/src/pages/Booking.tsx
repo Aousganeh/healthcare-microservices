@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, Loader2, Search } from "lucide-react";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { DoctorCard } from "@/components/booking/DoctorCard";
@@ -9,10 +10,11 @@ import { AppointmentForm } from "@/components/booking/AppointmentForm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getDoctors, getPatients, createAppointment } from "@/lib/api";
+import { getDoctors, getPatientByEmail, createAppointment } from "@/lib/api";
 import type { AppointmentPayload, Doctor } from "@/types/api";
 
 const Booking = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [specializationFilter, setSpecializationFilter] = useState<string>("all");
@@ -27,13 +29,16 @@ const Booking = () => {
     queryFn: getDoctors,
   });
 
+  // Get patient by user's email
   const {
-    data: patients = [],
-    isLoading: isLoadingPatients,
+    data: patient,
+    isLoading: isLoadingPatient,
     isError: hasPatientError,
   } = useQuery({
-    queryKey: ["patients"],
-    queryFn: getPatients,
+    queryKey: ["patient", "email", user?.email],
+    queryFn: () => getPatientByEmail(user!.email!),
+    enabled: !!user?.email,
+    retry: false,
   });
 
   const filteredDoctors = useMemo(() => {
@@ -166,15 +171,23 @@ const Booking = () => {
 
               {hasPatientError ? (
                 <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
-                  Unable to load patients. Please refresh or try again later.
+                  <p className="font-semibold mb-2">Patient profile not found</p>
+                  <p className="text-sm">
+                    Please contact support to create a patient profile for your account ({user?.email}).
+                  </p>
                 </div>
-              ) : (
+              ) : isLoadingPatient ? (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                  <p className="text-muted-foreground">Loading your profile...</p>
+                </div>
+              ) : patient ? (
                 <AppointmentForm
                   doctor={selectedDoctor}
-                  patients={patients}
+                  patientId={patient.id}
                   onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload)}
                 />
-              )}
+              ) : null}
             </div>
           </div>
         </section>

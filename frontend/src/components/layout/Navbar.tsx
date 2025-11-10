@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Menu, X, Activity } from "lucide-react";
+import { Moon, Sun, Menu, X, Activity, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/navigation/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
+  const { isAuthenticated, user, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -71,9 +73,27 @@ export const Navbar = () => {
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
 
-            <Button variant="hero" size="lg" className="hidden md:inline-flex">
-              Get Started
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  <span>{user?.username}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={logout} className="hidden md:inline-flex">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button variant="hero" size="sm" asChild className="hidden md:inline-flex">
+                  <Link to="/register">Sign Up</Link>
+                </Button>
+              </>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -103,9 +123,27 @@ export const Navbar = () => {
                   {link.label}
                 </NavLink>
               ))}
-              <Button variant="hero" className="mt-2" onClick={() => setIsMenuOpen(false)}>
-                Get Started
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-muted-foreground flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{user?.username}</span>
+                  </div>
+                  <Button variant="outline" className="mt-2" onClick={() => { logout(); setIsMenuOpen(false); }}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" className="mt-2" asChild onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button variant="hero" className="mt-2" asChild onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/register">Sign Up</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}

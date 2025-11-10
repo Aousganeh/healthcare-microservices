@@ -12,18 +12,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { AppointmentPayload, Doctor, Patient } from "@/types/api";
+import type { AppointmentPayload, Doctor } from "@/types/api";
 
 interface AppointmentFormProps {
   doctor?: Doctor;
-  patients: Patient[];
+  patientId: number;
   onSubmit: (payload: AppointmentPayload) => Promise<void>;
 }
 
-export const AppointmentForm = ({ doctor, patients, onSubmit }: AppointmentFormProps) => {
+export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentFormProps) => {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("");
-  const [patientId, setPatientId] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,11 +32,6 @@ export const AppointmentForm = ({ doctor, patients, onSubmit }: AppointmentFormP
 
     if (!doctor) {
       toast.error("Please select a doctor before booking.");
-      return;
-    }
-
-    if (!patientId) {
-      toast.error("Please select a patient.");
       return;
     }
 
@@ -79,33 +73,12 @@ export const AppointmentForm = ({ doctor, patients, onSubmit }: AppointmentFormP
           {doctor ? `Book with Dr. ${doctor.name} ${doctor.surname}` : "Select a doctor to begin"}
         </CardTitle>
         <CardDescription>
-          Choose a patient, pick a convenient time, and describe the reason for the visit.
+          Pick a convenient time and describe the reason for the visit.
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="patient">Patient</Label>
-            <Select
-              disabled={patients.length === 0}
-              value={patientId?.toString() ?? ""}
-              onValueChange={(value) => setPatientId(Number(value))}
-              required
-            >
-              <SelectTrigger id="patient">
-                <SelectValue placeholder={patients.length ? "Select patient" : "No patients available"} />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id.toString()}>
-                    {patient.name} {patient.surname}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Appointment Date</Label>

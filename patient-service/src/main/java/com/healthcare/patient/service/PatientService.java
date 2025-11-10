@@ -82,6 +82,12 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
     
+    public PatientDTO getPatientByEmail(String email) {
+        Patient patient = patientRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found with email: " + email));
+        return toDTO(patient);
+    }
+    
     private PatientDTO toDTO(Patient patient) {
         PatientDTO dto = new PatientDTO();
         dto.setId(patient.getId());

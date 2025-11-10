@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Download, FileText, Loader2, User } from "lucide-react";
+import { Calendar, Download, FileText, Loader2 } from "lucide-react";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HealthMetrics } from "@/components/dashboard/HealthMetrics";
@@ -10,62 +11,51 @@ import { PrescriptionList } from "@/components/dashboard/PrescriptionList";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAppointmentsByPatient, getDoctors, getHealthMetrics, getPatient, getPatients, getPrescriptions } from "@/lib/api";
-import type { AppointmentDetail, Doctor, Patient } from "@/types/api";
+import { getAppointmentsByPatient, getDoctors, getHealthMetrics, getPatientByEmail, getPrescriptions } from "@/lib/api";
+import type { AppointmentDetail, Doctor } from "@/types/api";
 
 const Dashboard = () => {
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const { user } = useAuth();
 
-  const {
-    data: patients = [],
-    isLoading: isLoadingPatients,
-    isError: hasPatientsError,
-  } = useQuery({
-    queryKey: ["patients"],
-    queryFn: getPatients,
-  });
-
-  useEffect(() => {
-    if (!selectedPatientId && patients.length > 0) {
-      setSelectedPatientId(patients[0].id);
-    }
-  }, [patients, selectedPatientId]);
-
+  // Get patient by user's email
   const {
     data: patientDetail,
     isLoading: isLoadingPatient,
+    isError: hasPatientError,
   } = useQuery({
-    queryKey: ["patient", selectedPatientId],
-    queryFn: () => getPatient(selectedPatientId!),
-    enabled: !!selectedPatientId,
+    queryKey: ["patient", "email", user?.email],
+    queryFn: () => getPatientByEmail(user!.email!),
+    enabled: !!user?.email,
+    retry: false,
   });
+
+  const patientId = patientDetail?.id;
 
   const {
     data: appointments = [],
     isLoading: isLoadingAppointments,
   } = useQuery({
-    queryKey: ["appointments", "patient", selectedPatientId],
-    queryFn: () => getAppointmentsByPatient(selectedPatientId!),
-    enabled: !!selectedPatientId,
+    queryKey: ["appointments", "patient", patientId],
+    queryFn: () => getAppointmentsByPatient(patientId!),
+    enabled: !!patientId,
   });
 
   const {
     data: metrics = [],
     isLoading: isLoadingMetrics,
   } = useQuery({
-    queryKey: ["health-metrics", selectedPatientId],
-    queryFn: () => getHealthMetrics(selectedPatientId!),
-    enabled: !!selectedPatientId,
+    queryKey: ["health-metrics", patientId],
+    queryFn: () => getHealthMetrics(patientId!),
+    enabled: !!patientId,
   });
 
   const {
     data: prescriptions = [],
     isLoading: isLoadingPrescriptions,
   } = useQuery({
-    queryKey: ["prescriptions", selectedPatientId],
-    queryFn: () => getPrescriptions(selectedPatientId!),
-    enabled: !!selectedPatientId,
+    queryKey: ["prescriptions", patientId],
+    queryFn: () => getPrescriptions(patientId!),
+    enabled: !!patientId,
   });
 
   const { data: doctors = [] } = useQuery({
@@ -98,31 +88,16 @@ const Dashboard = () => {
                   Welcome back,{" "}
                   {isLoadingPatient ? (
                     <span className="text-muted-foreground">Loading...</span>
+                  ) : hasPatientError ? (
+                    <span className="text-muted-foreground">{user?.username || "User"}</span>
                   ) : (
-                    `${patientDetail?.name ?? ""} ${patientDetail?.surname ?? ""}`.trim() || "Patient"
+                    `${patientDetail?.name ?? ""} ${patientDetail?.surname ?? ""}`.trim() || user?.username || "Patient"
                   )}
                 </h1>
                 <p className="text-xl text-muted-foreground">Track appointments, medications, and health trends.</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Select
-                  value={selectedPatientId?.toString() ?? ""}
-                  onValueChange={(value) => setSelectedPatientId(Number(value))}
-                  disabled={isLoadingPatients || hasPatientsError || !patients.length}
-                >
-                  <SelectTrigger className="w-full sm:w-64 rounded-xl">
-                    <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map((patient: Patient) => (
-                      <SelectItem key={patient.id} value={patient.id.toString()}>
-                        {patient.name} {patient.surname}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/booking">
                     Book New Appointment
@@ -160,8 +135,7 @@ const Dashboard = () => {
                         Upcoming Appointments
                       </CardTitle>
                       <CardDescription>
-                        Next visits for{" "}
-                        {patientDetail ? `${patientDetail.name} ${patientDetail.surname}`.trim() : "this patient"}
+                        Your upcoming appointments
                       </CardDescription>
                     </div>
                     {isLoadingAppointments && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
