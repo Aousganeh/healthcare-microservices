@@ -109,8 +109,15 @@ export function getDoctorsBySpecialization(specialization: string) {
   return request<Doctor[]>(`${API_BASE}/doctors/specialization/${encodeURIComponent(specialization)}`);
 }
 
-export function getPatientByEmail(email: string) {
-  return request<Patient>(`${API_BASE}/patients/email/${encodeURIComponent(email)}`);
+export async function getPatientByEmail(email: string): Promise<Patient | null> {
+  try {
+    return await request<Patient>(`${API_BASE}/patients/email/${encodeURIComponent(email)}`);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("404")) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export interface RescheduleRequest {

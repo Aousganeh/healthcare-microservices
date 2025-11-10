@@ -22,7 +22,6 @@ const Profile = () => {
   } = useQuery({
     queryKey: ["doctors"],
     queryFn: getDoctors,
-    enabled: isDoctor,
   });
 
   const doctor = useMemo(() => {
@@ -33,7 +32,9 @@ const Profile = () => {
   useEffect(() => {
     if (isDoctor && doctor?.id && !isLoadingDoctors && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
-      navigate(`/doctors/${doctor.id}`);
+      setTimeout(() => {
+        navigate(`/doctors/${doctor.id}`, { replace: true });
+      }, 0);
     }
   }, [isDoctor, doctor?.id, isLoadingDoctors, navigate]);
 
