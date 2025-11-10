@@ -32,9 +32,10 @@ const Profile = () => {
   useEffect(() => {
     if (isDoctor && doctor?.id && !isLoadingDoctors && !hasNavigatedRef.current) {
       hasNavigatedRef.current = true;
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         navigate(`/doctors/${doctor.id}`, { replace: true });
       }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isDoctor, doctor?.id, isLoadingDoctors, navigate]);
 
@@ -46,8 +47,12 @@ const Profile = () => {
     );
   }
 
-  if (isDoctor && doctor) {
-    return null;
+  if (isDoctor && doctor?.id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (

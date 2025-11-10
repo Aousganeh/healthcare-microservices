@@ -110,14 +110,35 @@ export function getDoctorsBySpecialization(specialization: string) {
 }
 
 export async function getPatientByEmail(email: string): Promise<Patient | null> {
-  try {
-    return await request<Patient>(`${API_BASE}/patients/email/${encodeURIComponent(email)}`);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("404")) {
-      return null;
-    }
-    throw error;
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
+
+  const response = await fetch(`${API_BASE}/patients/email/${encodeURIComponent(email)}`, {
+    headers,
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+    const message = await response.text();
+    throw new Error(message || `Request failed with status ${response.status}`);
+  }
+
+  return response.json() as Promise<Patient>;
 }
 
 export interface RescheduleRequest {
