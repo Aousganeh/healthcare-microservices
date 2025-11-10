@@ -30,6 +30,7 @@ export function RescheduleDialog({ appointment, open, onOpenChange, onSuccess }:
   const [date, setDate] = useState<Date>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +74,7 @@ export function RescheduleDialog({ appointment, open, onOpenChange, onSuccess }:
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="date">New Appointment Date</Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -85,8 +86,11 @@ export function RescheduleDialog({ appointment, open, onOpenChange, onSuccess }:
                     mode="single"
                     selected={date}
                     onSelect={(newDate) => {
-                      setDate(newDate);
+                      setDate(newDate || undefined);
                       setSelectedTimeSlot(null); // Reset time slot when date changes
+                      if (newDate) {
+                        setCalendarOpen(false); // Close popover after date selection
+                      }
                     }}
                     initialFocus
                     disabled={(currentDate) => currentDate < new Date()}

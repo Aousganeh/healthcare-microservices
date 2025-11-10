@@ -27,6 +27,7 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -80,7 +81,7 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label>Appointment Date</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -92,8 +93,11 @@ export const AppointmentForm = ({ doctor, patientId, onSubmit }: AppointmentForm
                   mode="single"
                   selected={date}
                   onSelect={(newDate) => {
-                    setDate(newDate);
+                    setDate(newDate || undefined);
                     setSelectedTimeSlot(null); // Reset time slot when date changes
+                    if (newDate) {
+                      setCalendarOpen(false); // Close popover after date selection
+                    }
                   }}
                   initialFocus
                   disabled={(currentDate) => currentDate < new Date()}
