@@ -24,10 +24,8 @@ public class DoctorDTO {
     @NotBlank(message = "Surname is required")
     private String surname;
     
-    @NotNull(message = "Date of birth is required")
     private LocalDate dateOfBirth;
     
-    @NotNull(message = "Gender is required")
     private Gender gender;
     
     @Email(message = "Invalid email format")

@@ -207,6 +207,8 @@ public class AuthService {
             doctorDTO.put("workingHoursStart", "09:00");
             doctorDTO.put("workingHoursEnd", "17:00");
             doctorDTO.put("workingDays", "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+            doctorDTO.put("gender", "MALE");
+            doctorDTO.put("dateOfBirth", "1980-01-01");
             
             try {
                 doctorServiceClient.createDoctor(doctorDTO);
