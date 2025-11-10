@@ -124,7 +124,7 @@ const Booking = () => {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Available Doctors</h2>
-              {(isLoadingDoctors || isLoadingPatients) && (
+              {(isLoadingDoctors || isLoadingPatient) && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading data...
