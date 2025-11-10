@@ -1,4 +1,5 @@
-import { useQuery, useMemo } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Loader2, User as UserIcon, Mail, Settings } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
