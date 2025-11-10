@@ -47,7 +47,7 @@ public class AppointmentService {
     public AppointmentDTO createAppointment(AppointmentDTO appointmentDTO) {
         Appointment appointment = toEntity(appointmentDTO);
         if (appointment.getStatus() == null) {
-            appointment.setStatus(AppointmentStatus.SCHEDULED);
+            appointment.setStatus(AppointmentStatus.PENDING);
         }
         if (appointment.getDurationMinutes() == null) {
             appointment.setDurationMinutes(30);
@@ -226,6 +226,35 @@ public class AppointmentService {
         // Reset status to SCHEDULED when rescheduling
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         
+        appointment = appointmentRepository.save(appointment);
+        return toDTO(appointment);
+    }
+    
+    public AppointmentDTO approveAppointment(Integer id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+        
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new RuntimeException("Only pending appointments can be approved");
+        }
+        
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
+        appointment = appointmentRepository.save(appointment);
+        return toDTO(appointment);
+    }
+    
+    public AppointmentDTO rejectAppointment(Integer id, String reason) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
+        
+        if (appointment.getStatus() != AppointmentStatus.PENDING) {
+            throw new RuntimeException("Only pending appointments can be rejected");
+        }
+        
+        appointment.setStatus(AppointmentStatus.REJECTED);
+        if (reason != null && !reason.isEmpty()) {
+            appointment.setNotes((appointment.getNotes() != null ? appointment.getNotes() + "\n" : "") + "Rejection reason: " + reason);
+        }
         appointment = appointmentRepository.save(appointment);
         return toDTO(appointment);
     }

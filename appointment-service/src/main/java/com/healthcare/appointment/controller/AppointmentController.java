@@ -107,4 +107,19 @@ public class AppointmentController {
             @RequestParam(required = false) Integer excludeAppointmentId) {
         return ResponseEntity.ok(appointmentService.getAvailableTimeSlots(doctorId, date, excludeAppointmentId));
     }
+    
+    @Operation(summary = "Approve appointment", description = "Approves a pending appointment")
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<AppointmentDTO> approveAppointment(@PathVariable Integer id) {
+        return ResponseEntity.ok(appointmentService.approveAppointment(id));
+    }
+    
+    @Operation(summary = "Reject appointment", description = "Rejects a pending appointment")
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<AppointmentDTO> rejectAppointment(
+            @PathVariable Integer id,
+            @RequestBody(required = false) java.util.Map<String, String> request) {
+        String reason = request != null ? request.get("reason") : null;
+        return ResponseEntity.ok(appointmentService.rejectAppointment(id, reason));
+    }
 }

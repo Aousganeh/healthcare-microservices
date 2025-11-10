@@ -16,6 +16,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import DoctorsPage from "@/pages/DoctorsPage";
 import DoctorProfile from "@/pages/DoctorProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,14 @@ const App = () => (
                 <AdminRoute>
                   <AdminDashboard />
                 </AdminRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
               }
             />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

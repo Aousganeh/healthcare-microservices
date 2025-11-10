@@ -1,5 +1,5 @@
 export interface Doctor {
-  id: number;
+  id?: number;
   name: string;
   surname: string;
   specialization: string;
@@ -13,6 +13,7 @@ export interface Doctor {
   workingHoursEnd?: string;
   workingDays?: string;
   photoUrl?: string;
+  licenseNumber?: string;
 }
 
 export interface Patient {

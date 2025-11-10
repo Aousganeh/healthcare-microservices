@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Loader2,
   ArrowLeft,
@@ -11,20 +12,39 @@ import {
   Calendar,
   GraduationCap,
   Activity,
+  Settings,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getDoctor } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { WorkingDaysSelector } from "@/components/WorkingDaysSelector";
+import { getDoctor, updateDoctor } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatWorkingDays, parseWorkingDays, DAYS_OF_WEEK } from "@/utils/workingDays";
+import type { Doctor } from "@/types/api";
+import { toast } from "sonner";
 
 const DoctorProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, isDoctor } = useAuth();
+  const queryClient = useQueryClient();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [workingHoursStart, setWorkingHoursStart] = useState("");
+  const [workingHoursEnd, setWorkingHoursEnd] = useState("");
+  const [workingDays, setWorkingDays] = useState("");
 
   const {
     data: doctor,
@@ -77,6 +97,37 @@ const DoctorProfile = () => {
   const experienceLabel =
     doctor.yearsOfExperience != null ? `${doctor.yearsOfExperience} years experience` : "Experience N/A";
   const specialization = doctor.specialization ?? "General Practice";
+  const isOwnProfile = isDoctor && user?.email === doctor.email;
+
+  const updateDoctorMutation = useMutation({
+    mutationFn: (data: Partial<Doctor>) => updateDoctor(doctor.id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctor", id] });
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Working hours and days updated successfully");
+      setIsSettingsOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update working hours", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handleOpenSettings = () => {
+    setWorkingHoursStart(doctor.workingHoursStart || "09:00");
+    setWorkingHoursEnd(doctor.workingHoursEnd || "17:00");
+    setWorkingDays(doctor.workingDays || "");
+    setIsSettingsOpen(true);
+  };
+
+  const handleSaveSettings = () => {
+    updateDoctorMutation.mutate({
+      workingHoursStart,
+      workingHoursEnd,
+      workingDays,
+    });
+  };
 
 
   return (
@@ -143,7 +194,14 @@ const DoctorProfile = () => {
                         </Badge>
                       )}
 
-                      {isAuthenticated && (
+                      {isOwnProfile && (
+                        <Button variant="outline" className="w-full" onClick={handleOpenSettings}>
+                          <Settings className="h-4 w-4 mr-2" />
+                          Edit Working Hours
+                        </Button>
+                      )}
+
+                      {isAuthenticated && !isOwnProfile && (
                         <Button variant="hero" className="w-full" asChild>
                           <Link to={`/booking?doctorId=${doctor.id}`}>
                             <Calendar className="h-4 w-4 mr-2" />
@@ -274,6 +332,60 @@ const DoctorProfile = () => {
       </main>
 
       <Footer />
+
+      {isOwnProfile && (
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Update Working Hours & Days</DialogTitle>
+              <DialogDescription>
+                Update your working hours and days to help patients book appointments at available times.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start-time">Start Time</Label>
+                  <Input
+                    id="start-time"
+                    type="time"
+                    value={workingHoursStart}
+                    onChange={(e) => setWorkingHoursStart(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end-time">End Time</Label>
+                  <Input
+                    id="end-time"
+                    type="time"
+                    value={workingHoursEnd}
+                    onChange={(e) => setWorkingHoursEnd(e.target.value)}
+                  />
+                </div>
+              </div>
+              <WorkingDaysSelector value={workingDays} onChange={setWorkingDays} />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveSettings}
+                disabled={updateDoctorMutation.isPending || !workingHoursStart || !workingHoursEnd}
+              >
+                {updateDoctorMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

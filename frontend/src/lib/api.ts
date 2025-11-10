@@ -56,6 +56,20 @@ export function getDoctor(doctorId: number) {
   return request<Doctor>(`${API_BASE}/doctors/${doctorId}`);
 }
 
+export function createDoctor(doctor: Partial<Doctor>) {
+  return request<Doctor>(`${API_BASE}/doctors`, {
+    method: "POST",
+    body: JSON.stringify(doctor),
+  });
+}
+
+export function updateDoctor(doctorId: number, doctor: Partial<Doctor>) {
+  return request<Doctor>(`${API_BASE}/doctors/${doctorId}`, {
+    method: "PUT",
+    body: JSON.stringify(doctor),
+  });
+}
+
 export function getPatients() {
   return request<Patient[]>(`${API_BASE}/patients`);
 }
@@ -108,6 +122,19 @@ export function rescheduleAppointment(appointmentId: number, rescheduleRequest: 
   return request<Appointment>(`${API_BASE}/appointments/${appointmentId}/reschedule`, {
     method: "PATCH",
     body: JSON.stringify(rescheduleRequest),
+  });
+}
+
+export function approveAppointment(appointmentId: number) {
+  return request<Appointment>(`${API_BASE}/appointments/${appointmentId}/approve`, {
+    method: "PATCH",
+  });
+}
+
+export function rejectAppointment(appointmentId: number, reason?: string) {
+  return request<Appointment>(`${API_BASE}/appointments/${appointmentId}/reject`, {
+    method: "PATCH",
+    body: reason ? JSON.stringify({ reason }) : undefined,
   });
 }
 

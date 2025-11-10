@@ -124,15 +124,6 @@ public class AuthService {
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already exists");
         }
-        
-        try {
-            Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(email);
-            if (doctor == null) {
-                throw new RuntimeException("Doctor not found with email: " + email);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Doctor not found with email: " + email);
-        }
 
         User user = new User();
         user.setUsername(email);
@@ -168,7 +159,13 @@ public class AuthService {
         user.getRoles().clear();
         user.getRoles().add(role);
         
-        return userRepository.save(user);
+        user = userRepository.save(user);
+        
+        if ("ROLE_DOCTOR".equals(roleName)) {
+            createDoctorProfileIfNotExists(user);
+        }
+        
+        return user;
     }
     
     @Transactional
@@ -187,7 +184,36 @@ public class AuthService {
             user.getRoles().add(role);
         }
         
-        return userRepository.save(user);
+        user = userRepository.save(user);
+        
+        if ("ROLE_DOCTOR".equals(roleName)) {
+            createDoctorProfileIfNotExists(user);
+        }
+        
+        return user;
+    }
+    
+    private void createDoctorProfileIfNotExists(User user) {
+        try {
+            doctorServiceClient.getDoctorByEmail(user.getEmail());
+        } catch (Exception e) {
+            Map<String, Object> doctorDTO = new java.util.HashMap<>();
+            doctorDTO.put("name", user.getFirstName() != null ? user.getFirstName() : "");
+            doctorDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
+            doctorDTO.put("email", user.getEmail());
+            doctorDTO.put("licenseNumber", "LIC-" + System.currentTimeMillis());
+            doctorDTO.put("specialization", "General Practice");
+            doctorDTO.put("dutyStatus", "ON_DUTY");
+            doctorDTO.put("workingHoursStart", "09:00");
+            doctorDTO.put("workingHoursEnd", "17:00");
+            doctorDTO.put("workingDays", "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+            
+            try {
+                doctorServiceClient.createDoctor(doctorDTO);
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to create doctor profile: " + ex.getMessage());
+            }
+        }
     }
     
     public List<User> getAllUsers() {
@@ -200,7 +226,7 @@ public class AuthService {
                 .map(Role::getName)
                 .collect(Collectors.toSet());
 
-        return new AuthResponse(token, "Bearer", user.getUsername(), user.getEmail(), roles);
+        return new AuthResponse(token, "Bearer", user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), roles);
     }
 }
 

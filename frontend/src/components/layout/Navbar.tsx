@@ -6,7 +6,7 @@ import { NavLink } from "@/components/navigation/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
-  const { isAuthenticated, user, logout, isAdmin } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin, isDoctor } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -30,6 +30,11 @@ export const Navbar = () => {
     { to: "/doctors", label: "Doctors" },
     ...(isAdmin
       ? [{ to: "/admin/dashboard", label: "Admin" }]
+      : isDoctor
+      ? [
+          { to: "/booking", label: "Book Appointment" },
+          { to: "/doctor/dashboard", label: "Dashboard" },
+        ]
       : [
           { to: "/booking", label: "Book Appointment" },
           { to: "/dashboard", label: "Dashboard" },
@@ -80,10 +85,17 @@ export const Navbar = () => {
 
             {isAuthenticated ? (
               <>
-                <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span>{user?.username}</span>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="hidden md:inline-flex"
+                >
+                  <Link to="/profile" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{user?.username}</span>
+                  </Link>
+                </Button>
                 <Button variant="outline" size="sm" onClick={logout} className="hidden md:inline-flex">
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -130,10 +142,17 @@ export const Navbar = () => {
               ))}
               {isAuthenticated ? (
                 <>
-                  <div className="px-4 py-2 text-sm text-muted-foreground flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{user?.username}</span>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    className="mt-2 justify-start"
+                    asChild
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span>{user?.username}</span>
+                    </Link>
+                  </Button>
                   <Button variant="outline" className="mt-2" onClick={() => { logout(); setIsMenuOpen(false); }}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
