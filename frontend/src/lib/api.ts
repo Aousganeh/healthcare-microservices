@@ -96,10 +96,10 @@ export interface RescheduleRequest {
   durationMinutes?: number;
 }
 
-export function rescheduleAppointment(appointmentId: number, request: RescheduleRequest) {
+export function rescheduleAppointment(appointmentId: number, rescheduleRequest: RescheduleRequest) {
   return request<Appointment>(`${API_BASE}/appointments/${appointmentId}/reschedule`, {
     method: "PATCH",
-    body: JSON.stringify(request),
+    body: JSON.stringify(rescheduleRequest),
   });
 }
 
