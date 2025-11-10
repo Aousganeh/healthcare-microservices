@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Loader2, User as UserIcon, Mail, Settings } from "lucide-react";
@@ -29,6 +29,12 @@ const Profile = () => {
     return doctors.find((d: Doctor) => d.email === user?.email);
   }, [doctors, user?.email, isDoctor]);
 
+  useEffect(() => {
+    if (isDoctor && doctor?.id && !isLoadingDoctors) {
+      navigate(`/doctors/${doctor.id}`);
+    }
+  }, [isDoctor, doctor?.id, isLoadingDoctors, navigate]);
+
   if (isLoadingDoctors && isDoctor) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,7 +44,6 @@ const Profile = () => {
   }
 
   if (isDoctor && doctor) {
-    navigate(`/doctors/${doctor.id}`);
     return null;
   }
 
