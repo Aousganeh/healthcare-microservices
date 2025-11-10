@@ -56,6 +56,26 @@ const DoctorProfile = () => {
     enabled: !!id,
   });
 
+  const updateDoctorMutation = useMutation({
+    mutationFn: (data: Partial<Doctor>) => {
+      if (!doctor?.id) {
+        throw new Error("Doctor ID is required");
+      }
+      return updateDoctor(doctor.id, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctor", id] });
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      toast.success("Working hours and days updated successfully");
+      setIsSettingsOpen(false);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update working hours", {
+        description: error.message,
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -103,26 +123,6 @@ const DoctorProfile = () => {
     if (!time) return "09:00";
     return time.substring(0, 5);
   };
-
-  const updateDoctorMutation = useMutation({
-    mutationFn: (data: Partial<Doctor>) => {
-      if (!doctor?.id) {
-        throw new Error("Doctor ID is required");
-      }
-      return updateDoctor(doctor.id, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["doctor", id] });
-      queryClient.invalidateQueries({ queryKey: ["doctors"] });
-      toast.success("Working hours and days updated successfully");
-      setIsSettingsOpen(false);
-    },
-    onError: (error: Error) => {
-      toast.error("Failed to update working hours", {
-        description: error.message,
-      });
-    },
-  });
 
   const handleOpenSettings = () => {
     setWorkingHoursStart(formatTimeForInput(doctor.workingHoursStart));
