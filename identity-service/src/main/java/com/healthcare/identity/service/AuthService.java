@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,6 +64,7 @@ public class AuthService {
         String loginIdentifier = request.getUsername();
         User user = null;
         String emailForAuth = null;
+        boolean isDoctor = false;
         
         user = userRepository.findByEmail(loginIdentifier)
                 .orElse(null);
@@ -92,11 +94,18 @@ public class AuthService {
                                 .orElse(null);
                         if (user != null) {
                             emailForAuth = user.getEmail();
+                        } else {
+                            isDoctor = true;
+                            emailForAuth = doctorEmail;
                         }
                     }
                 } catch (Exception e) {
                 }
             }
+        }
+        
+        if (user == null && isDoctor) {
+            throw new UsernameNotFoundException("Doctor account not registered. Please register first with email: " + emailForAuth);
         }
         
         if (user == null || emailForAuth == null) {
@@ -108,6 +117,81 @@ public class AuthService {
         );
 
         return generateAuthResponse(user);
+    }
+    
+    @Transactional
+    public AuthResponse registerDoctor(String email, String password, String firstName, String lastName) {
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already exists");
+        }
+        
+        try {
+            Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(email);
+            if (doctor == null) {
+                throw new RuntimeException("Doctor not found with email: " + email);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Doctor not found with email: " + email);
+        }
+
+        User user = new User();
+        user.setUsername(email);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+
+        Role doctorRole = roleRepository.findByName("ROLE_DOCTOR")
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName("ROLE_DOCTOR");
+                    return roleRepository.save(role);
+                });
+        user.getRoles().add(doctorRole);
+
+        user = userRepository.save(user);
+        return generateAuthResponse(user);
+    }
+    
+    @Transactional
+    public User updateUserRole(String email, String roleName) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
+        
+        user.getRoles().clear();
+        user.getRoles().add(role);
+        
+        return userRepository.save(user);
+    }
+    
+    @Transactional
+    public User addRoleToUser(String email, String roleName) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(roleName);
+                    return roleRepository.save(newRole);
+                });
+        
+        if (!user.getRoles().contains(role)) {
+            user.getRoles().add(role);
+        }
+        
+        return userRepository.save(user);
+    }
+    
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     private AuthResponse generateAuthResponse(User user) {

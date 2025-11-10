@@ -15,6 +15,8 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
+  isDoctor: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,7 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("auth_user", JSON.stringify(userData));
-      navigate("/dashboard");
+      
+      if (userData.roles?.includes("ROLE_ADMIN")) {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -107,7 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("auth_user", JSON.stringify(userData));
-      navigate("/dashboard");
+      
+      if (userData.roles?.includes("ROLE_ADMIN")) {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -122,6 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate("/login");
   };
 
+  const isAdmin = user?.roles?.includes("ROLE_ADMIN") ?? false;
+  const isDoctor = user?.roles?.includes("ROLE_DOCTOR") ?? false;
+
   return (
     <AuthContext.Provider
       value={{
@@ -132,6 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         isAuthenticated: !!token && !!user,
         isLoading,
+        isAdmin,
+        isDoctor,
       }}
     >
       {children}

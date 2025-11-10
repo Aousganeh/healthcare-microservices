@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Menu, X, Activity, LogOut, User } from "lucide-react";
+import { Moon, Sun, Menu, X, Activity, LogOut, User, Shield } from "lucide-react";
 import { NavLink } from "@/components/navigation/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -30,6 +30,7 @@ export const Navbar = () => {
     { to: "/doctors", label: "Doctors" },
     { to: "/booking", label: "Book Appointment" },
     { to: "/dashboard", label: "Dashboard" },
+    ...(isAdmin ? [{ to: "/admin/dashboard", label: "Admin" }] : []),
   ];
 
   return (

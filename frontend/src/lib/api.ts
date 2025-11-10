@@ -126,3 +126,30 @@ export function getAvailableTimeSlots(doctorId: number, date: string, excludeApp
   return request<TimeSlot[]>(`${API_BASE}/appointments/doctors/${doctorId}/available-slots?${params.toString()}`);
 }
 
+export interface User {
+  id?: number;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  roles: string[];
+}
+
+export function getAllUsers() {
+  return request<User[]>(`${API_BASE}/auth/users`);
+}
+
+export function updateUserRole(email: string, role: string) {
+  return request<{ email: string; roles: string[] }>(`${API_BASE}/auth/users/${encodeURIComponent(email)}/role`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+}
+
+export function addRoleToUser(email: string, role: string) {
+  return request<{ email: string; roles: string[] }>(`${API_BASE}/auth/users/${encodeURIComponent(email)}/role`, {
+    method: "POST",
+    body: JSON.stringify({ role }),
+  });
+}
+
