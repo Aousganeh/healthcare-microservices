@@ -138,9 +138,20 @@ const DoctorDashboard = () => {
   const handleSaveSettings = () => {
     if (doctor) {
       updateDoctorMutation.mutate({
+        name: doctor.name,
+        surname: doctor.surname,
+        specialization: doctor.specialization,
+        licenseNumber: doctor.licenseNumber,
+        email: doctor.email,
+        phoneNumber: doctor.phoneNumber,
+        department: doctor.department,
+        dutyStatus: doctor.dutyStatus,
+        yearsOfExperience: doctor.yearsOfExperience,
+        qualifications: doctor.qualifications,
         workingHoursStart,
         workingHoursEnd,
         workingDays,
+        photoUrl: doctor.photoUrl,
       });
     }
   };
