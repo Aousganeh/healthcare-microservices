@@ -495,14 +495,27 @@ const Profile = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="photoUrl">Photo URL</Label>
+                  <Label htmlFor="yearsOfExperience">Years of Experience</Label>
                   <Input
-                    id="photoUrl"
-                    value={formData.photoUrl}
-                    onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                    placeholder="https://example.com/photo.jpg"
+                    id="yearsOfExperience"
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={formData.yearsOfExperience || ""}
+                    onChange={(e) => setFormData({ ...formData, yearsOfExperience: parseInt(e.target.value) || 0 })}
+                    placeholder="e.g., 10"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="photoUrl">Photo URL</Label>
+                <Input
+                  id="photoUrl"
+                  value={formData.photoUrl}
+                  onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
+                  placeholder="https://example.com/photo.jpg"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
