@@ -82,6 +82,13 @@ const DoctorDashboard = () => {
     return appointments.filter((appointment: AppointmentDetail) => appointment.status === "PENDING");
   }, [appointments]);
 
+  const allAppointments = useMemo(() => {
+    return [...appointments].sort(
+      (a: AppointmentDetail, b: AppointmentDetail) =>
+        new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime(),
+    );
+  }, [appointments]);
+
   const updateDoctorMutation = useMutation({
     mutationFn: (data: Partial<Doctor>) => updateDoctor(doctor!.id, data),
     onSuccess: () => {
