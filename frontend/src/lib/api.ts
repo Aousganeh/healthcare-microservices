@@ -98,6 +98,13 @@ export function getPatient(patientId: number) {
   return request<Patient>(`${API_BASE}/patients/${patientId}`);
 }
 
+export function updatePatient(patientId: number, data: Partial<Patient>) {
+  return request<Patient>(`${API_BASE}/patients/${patientId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export function searchDoctors(query: string) {
   return request<Doctor[]>(`${API_BASE}/doctors/search?q=${encodeURIComponent(query)}`);
 }
