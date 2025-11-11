@@ -234,7 +234,7 @@ public class AuthService {
         return new AuthResponse(token, "Bearer", refreshToken, user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), roles);
     }
 
-    public User findUserById(Long id) {
+    public User findUserById(Integer id) {
         return userRepository.findById(id).orElse(null);
     }
 

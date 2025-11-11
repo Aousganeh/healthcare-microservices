@@ -123,7 +123,7 @@ public class AuthController {
         if (rotated == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        User user = authService.findUserById(Long.valueOf(userId));
+        User user = authService.findUserById(Integer.valueOf(userId));
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
