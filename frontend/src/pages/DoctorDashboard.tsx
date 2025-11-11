@@ -32,7 +32,6 @@ const DoctorDashboard = () => {
   const [workingHoursEnd, setWorkingHoursEnd] = useState("");
   const [workingDays, setWorkingDays] = useState("");
 
-  // Get doctor by email
   const {
     data: doctors = [],
     isLoading: isLoadingDoctors,

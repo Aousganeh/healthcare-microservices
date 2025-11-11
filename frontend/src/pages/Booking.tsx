@@ -41,7 +41,6 @@ const Booking = () => {
     }
   }, [searchParams, doctors]);
 
-  // Get patient by user's email
   const {
     data: patient,
     isLoading: isLoadingPatient,

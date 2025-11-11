@@ -34,7 +34,6 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Unauthorized - clear auth and redirect to login
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
       window.location.href = "/login";

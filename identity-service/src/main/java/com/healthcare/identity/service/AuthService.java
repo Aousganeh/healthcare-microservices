@@ -34,6 +34,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PatientServiceClient patientServiceClient;
     private final DoctorServiceClient doctorServiceClient;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -57,7 +58,7 @@ public class AuthService {
         user.getRoles().add(patientRole);
 
         user = userRepository.save(user);
-        return generateAuthResponse(user);
+        return generateAuthResponse(user, null);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -116,7 +117,7 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(emailForAuth, request.getPassword())
         );
 
-        return generateAuthResponse(user);
+        return generateAuthResponse(user, null);
     }
     
     @Transactional
@@ -141,7 +142,7 @@ public class AuthService {
         user.getRoles().add(doctorRole);
 
         user = userRepository.save(user);
-        return generateAuthResponse(user);
+        return generateAuthResponse(user, null);
     }
     
     @Transactional
@@ -222,13 +223,23 @@ public class AuthService {
         return userRepository.findAll();
     }
 
-    private AuthResponse generateAuthResponse(User user) {
+    private AuthResponse generateAuthResponse(User user, String refreshTokenOverride) {
         String token = jwtUtil.generateToken(user);
+        String refreshToken = refreshTokenOverride != null ? refreshTokenOverride
+                : refreshTokenService.issue(String.valueOf(user.getId()), null, null);
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
 
-        return new AuthResponse(token, "Bearer", user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), roles);
+        return new AuthResponse(token, "Bearer", refreshToken, user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), roles);
+    }
+
+    public User findUserById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public AuthResponse privateGenerateForExistingUser(User user, String refreshTokenOverride) {
+        return generateAuthResponse(user, refreshTokenOverride);
     }
 }
 

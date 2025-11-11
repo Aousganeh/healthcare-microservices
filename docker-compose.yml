@@ -179,6 +179,20 @@ services:
     networks:
       - healthcare-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: healthcare-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   identity-service:
     build:
       context: .
@@ -193,6 +207,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
     depends_on:
+      redis:
+        condition: service_healthy
       postgres-identity:
         condition: service_healthy
       service-discovery:

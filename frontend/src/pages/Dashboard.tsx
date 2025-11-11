@@ -21,7 +21,6 @@ const Dashboard = () => {
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetail | null>(null);
 
-  // Get patient by user's email
   const {
     data: patientDetail,
     isLoading: isLoadingPatient,

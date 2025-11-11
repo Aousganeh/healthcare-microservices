@@ -214,7 +214,6 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
         
-        // Validate new date is in the future
         if (request.getNewAppointmentDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("New appointment date must be in the future");
         }
@@ -223,7 +222,6 @@ public class AppointmentService {
         if (request.getDurationMinutes() != null) {
             appointment.setDurationMinutes(request.getDurationMinutes());
         }
-        // Reset status to SCHEDULED when rescheduling
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         
         appointment = appointmentRepository.save(appointment);
@@ -260,10 +258,8 @@ public class AppointmentService {
     }
     
     public List<TimeSlotDTO> getAvailableTimeSlots(Integer doctorId, LocalDate date, Integer excludeAppointmentId) {
-        // Get doctor information
         Map<String, Object> doctor = doctorServiceClient.getDoctorById(doctorId);
         
-        // Default working hours if not set
         LocalTime startTime = LocalTime.of(9, 0); // 9:00 AM
         LocalTime endTime = LocalTime.of(17, 0); // 5:00 PM
         
@@ -273,7 +269,6 @@ public class AppointmentService {
                 if (startObj instanceof String) {
                     startTime = LocalTime.parse((String) startObj);
                 } else if (startObj instanceof Map) {
-                    // If it's a JSON object with hour and minute
                     Map<String, Object> timeMap = (Map<String, Object>) startObj;
                     Integer hour = (Integer) timeMap.get("hour");
                     Integer minute = (Integer) timeMap.get("minute");
@@ -287,7 +282,6 @@ public class AppointmentService {
                 if (endObj instanceof String) {
                     endTime = LocalTime.parse((String) endObj);
                 } else if (endObj instanceof Map) {
-                    // If it's a JSON object with hour and minute
                     Map<String, Object> timeMap = (Map<String, Object>) endObj;
                     Integer hour = (Integer) timeMap.get("hour");
                     Integer minute = (Integer) timeMap.get("minute");
@@ -297,16 +291,13 @@ public class AppointmentService {
                 }
             }
         } catch (Exception e) {
-            // Use defaults if parsing fails
         }
         
-        // Check if doctor works on this day
         String workingDays = (String) doctor.get("workingDays");
         if (workingDays != null && !workingDays.isEmpty()) {
             DayOfWeek dayOfWeek = date.getDayOfWeek();
             String dayName = dayOfWeek.name();
             
-            // Parse working days - support both "MONDAY,TUESDAY,..." and "MON-FRI" formats
             List<String> days = new ArrayList<>();
             String[] parts = workingDays.split(",");
             for (String part : parts) {
@@ -323,7 +314,6 @@ public class AppointmentService {
             }
         }
         
-        // Get existing appointments for this doctor on this date
         List<Appointment> existingAppointments = appointmentRepository.findByDoctorId(doctorId).stream()
                 .filter(apt -> {
                     LocalDate aptDate = apt.getAppointmentDate().toLocalDate();
@@ -333,7 +323,6 @@ public class AppointmentService {
                 })
                 .collect(Collectors.toList());
         
-        // Generate 30-minute time slots
         List<TimeSlotDTO> slots = new ArrayList<>();
         LocalDateTime slotStart = LocalDateTime.of(date, startTime);
         LocalDateTime slotEnd = slotStart.plusMinutes(30);
@@ -347,20 +336,17 @@ public class AppointmentService {
             slot.setEndTime(slotEnd);
             slot.setDisplayTime(slotStart.toLocalTime().format(timeFormatter));
             
-            // Check if this slot conflicts with existing appointments
             boolean isAvailable = true;
             for (Appointment apt : existingAppointments) {
                 LocalDateTime aptStart = apt.getAppointmentDate();
                 LocalDateTime aptEnd = aptStart.plusMinutes(apt.getDurationMinutes() != null ? apt.getDurationMinutes() : 30);
                 
-                // Check for overlap
                 if (slotStart.isBefore(aptEnd) && slotEnd.isAfter(aptStart)) {
                     isAvailable = false;
                     break;
                 }
             }
             
-            // Don't show past slots
             if (slotStart.isBefore(LocalDateTime.now())) {
                 isAvailable = false;
             }

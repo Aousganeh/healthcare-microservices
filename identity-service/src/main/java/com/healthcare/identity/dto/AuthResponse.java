@@ -14,6 +14,7 @@ import java.util.Set;
 public class AuthResponse {
     private String token;
     private String type = "Bearer";
+    private String refreshToken;
     private String username;
     private String email;
     private String firstName;
