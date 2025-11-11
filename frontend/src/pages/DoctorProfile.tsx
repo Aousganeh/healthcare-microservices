@@ -218,14 +218,7 @@ const DoctorProfile = () => {
                         </Badge>
                       )}
 
-                      {isOwnProfile && (
-                        <Button variant="outline" className="w-full" onClick={handleOpenSettings}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          Edit Working Hours
-                        </Button>
-                      )}
-
-                      {isAuthenticated && !isOwnProfile && (
+                      {isAuthenticated && !isOwnProfile && !isDoctor && (
                         <Button variant="hero" className="w-full" asChild>
                           <Link to={`/booking?doctorId=${doctor.id}`}>
                             <Calendar className="h-4 w-4 mr-2" />
@@ -357,7 +350,7 @@ const DoctorProfile = () => {
 
       <Footer />
 
-      {isOwnProfile && (
+      {false && (
         <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
