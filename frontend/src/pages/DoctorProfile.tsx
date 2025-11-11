@@ -172,7 +172,7 @@ const DoctorProfile = () => {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
-                <Card className="sticky top-24">
+                <Card className="lg:sticky lg:top-24">
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-4">
                       {doctor.photoUrl ? (
@@ -352,7 +352,7 @@ const DoctorProfile = () => {
 
       {false && (
         <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Update Working Hours & Days</DialogTitle>
               <DialogDescription>

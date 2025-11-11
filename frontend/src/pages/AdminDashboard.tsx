@@ -251,7 +251,7 @@ const AdminDashboard = () => {
                     {filteredUsers.map((user: User) => (
                       <Card key={user.email} className="hover:shadow-glow transition-all duration-300">
                         <CardHeader>
-                          <div className="flex items-start justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1">
                               <CardTitle className="flex items-center gap-2 mb-2">
                                 <UserIcon className="h-5 w-5 text-primary" />
@@ -273,6 +273,7 @@ const AdminDashboard = () => {
                               size="sm"
                               onClick={() => handleOpenDialog(user)}
                               disabled={updateRoleMutation.isPending}
+                              className="w-full sm:w-auto"
                             >
                               <Settings className="h-4 w-4 mr-2" />
                               Change Role
@@ -327,7 +328,7 @@ const AdminDashboard = () => {
                     {filteredSpecializations.map((spec: Specialization) => (
                       <Card key={spec.id} className="hover:shadow-glow transition-all duration-300">
                         <CardHeader>
-                          <div className="flex items-start justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1">
                               <CardTitle className="flex items-center gap-2 mb-2">
                                 <Award className="h-5 w-5 text-primary" />
@@ -342,12 +343,13 @@ const AdminDashboard = () => {
                                 </Badge>
                               </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleOpenSpecializationDialog(spec)}
                                 disabled={updateSpecializationMutation.isPending || deleteSpecializationMutation.isPending}
+                                className="w-full sm:w-auto"
                               >
                                 <Edit2 className="h-4 w-4 mr-2" />
                                 Edit
@@ -357,6 +359,7 @@ const AdminDashboard = () => {
                                 size="sm"
                                 onClick={() => handleDeleteSpecialization(spec.id)}
                                 disabled={deleteSpecializationMutation.isPending}
+                                className="w-full sm:w-auto"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete

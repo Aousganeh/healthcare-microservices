@@ -172,7 +172,7 @@ const Profile = () => {
             {isDoctor && doctor ? (
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
-                  <Card className="sticky top-24">
+                  <Card className="lg:sticky lg:top-24">
                     <CardContent className="pt-6">
                       <div className="flex flex-col items-center text-center space-y-4">
                         {doctor.photoUrl ? (
@@ -414,7 +414,7 @@ const Profile = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">First Name *</Label>
                   <Input
@@ -435,7 +435,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="specialization">Specialization *</Label>
                   <Select
@@ -464,7 +464,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="phoneNumber">Phone Number</Label>
                   <Input
@@ -484,7 +484,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="workingHoursStart">
                     Working Hours Start {formData.workingDays && formData.workingDays.trim() !== "" ? "*" : ""}

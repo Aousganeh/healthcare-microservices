@@ -214,7 +214,7 @@ const DoctorDashboard = () => {
 
         <section className="py-8">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending</CardTitle>
@@ -375,8 +375,8 @@ const DoctorDashboard = () => {
                     return (
                       <Card key={appointment.id} className="hover:shadow-medium transition-all">
                         <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="space-y-1 flex-1">
                               <h4 className="font-semibold text-lg">
                                 {appointment.patientName || "Patient"}
                               </h4>
@@ -419,7 +419,7 @@ const DoctorDashboard = () => {
       <Footer />
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Update Working Hours & Days</DialogTitle>
             <DialogDescription>
@@ -427,7 +427,7 @@ const DoctorDashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-time">
                   Start Time {workingDays && workingDays.trim() !== "" ? "*" : ""}

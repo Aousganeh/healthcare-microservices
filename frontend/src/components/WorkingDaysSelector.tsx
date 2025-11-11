@@ -74,7 +74,7 @@ export const WorkingDaysSelector = ({ value, onChange, label = "Working Days" }:
       
       <Card>
         <CardContent className="pt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {DAYS_OF_WEEK.map((day) => {
               const isSelected = selectedDays.includes(day.value);
               return (
