@@ -3,8 +3,10 @@ package com.healthcare.doctor.service;
 import com.healthcare.doctor.dto.DoctorDTO;
 import com.healthcare.doctor.entity.Doctor;
 import com.healthcare.doctor.entity.Specialization;
+import com.healthcare.doctor.entity.Department;
 import com.healthcare.doctor.repository.DoctorRepository;
 import com.healthcare.doctor.repository.SpecializationRepository;
+import com.healthcare.doctor.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final SpecializationRepository specializationRepository;
+    private final DepartmentRepository departmentRepository;
     
     public List<DoctorDTO> getAllDoctors() {
         return doctorRepository.findAll().stream()
@@ -59,6 +62,13 @@ public class DoctorService {
         
         Doctor doctor = toEntity(doctorDTO);
         doctor.setSpecialization(specialization);
+        
+        if (doctorDTO.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(doctorDTO.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found with id: " + doctorDTO.getDepartmentId()));
+            doctor.setDepartment(department);
+        }
+        
         doctor = doctorRepository.save(doctor);
         return toDTO(doctor);
     }
@@ -78,7 +88,14 @@ public class DoctorService {
         doctor.setPhoneNumber(doctorDTO.getPhoneNumber());
         doctor.setLicenseNumber(doctorDTO.getLicenseNumber());
         doctor.setSpecialization(specialization);
-        doctor.setDepartment(doctorDTO.getDepartment());
+        
+        if (doctorDTO.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(doctorDTO.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found with id: " + doctorDTO.getDepartmentId()));
+            doctor.setDepartment(department);
+        } else {
+            doctor.setDepartment(null);
+        }
         doctor.setDutyStatus(doctorDTO.getDutyStatus());
         doctor.setYearsOfExperience(doctorDTO.getYearsOfExperience());
         doctor.setQualifications(doctorDTO.getQualifications());
@@ -115,7 +132,9 @@ public class DoctorService {
     }
     
     public List<DoctorDTO> getDoctorsByDepartment(String department) {
-        return doctorRepository.findByDepartment(department)
+        Department dept = departmentRepository.findByName(department)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + department));
+        return doctorRepository.findByDepartment(dept)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -135,7 +154,10 @@ public class DoctorService {
             dto.setSpecializationId(doctor.getSpecialization().getId());
             dto.setSpecializationName(doctor.getSpecialization().getName());
         }
-        dto.setDepartment(doctor.getDepartment());
+        if (doctor.getDepartment() != null) {
+            dto.setDepartmentId(doctor.getDepartment().getId());
+            dto.setDepartmentName(doctor.getDepartment().getName());
+        }
         dto.setDutyStatus(doctor.getDutyStatus());
         dto.setYearsOfExperience(doctor.getYearsOfExperience());
         dto.setQualifications(doctor.getQualifications());
@@ -155,7 +177,6 @@ public class DoctorService {
         doctor.setEmail(dto.getEmail());
         doctor.setPhoneNumber(dto.getPhoneNumber());
         doctor.setLicenseNumber(dto.getLicenseNumber());
-        doctor.setDepartment(dto.getDepartment());
         doctor.setDutyStatus(dto.getDutyStatus());
         doctor.setYearsOfExperience(dto.getYearsOfExperience());
         doctor.setQualifications(dto.getQualifications());

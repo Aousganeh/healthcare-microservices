@@ -41,7 +41,9 @@ public class DoctorDTO {
     
     private String specializationName;
     
-    private String department;
+    private Integer departmentId;
+    
+    private String departmentName;
     
     private DutyStatus dutyStatus;
     

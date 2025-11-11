@@ -2,6 +2,7 @@ import type {
   Appointment,
   AppointmentPayload,
   AppointmentDetail,
+  Department,
   Doctor,
   HealthMetric,
   Patient,
@@ -237,6 +238,38 @@ export function updateSpecialization(id: number, specialization: Partial<Special
 
 export function deleteSpecialization(id: number) {
   return request<void>(`${API_BASE}/specializations/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export function getDepartments() {
+  return request<Department[]>(`${API_BASE}/departments`);
+}
+
+export function getActiveDepartments() {
+  return request<Department[]>(`${API_BASE}/departments/active`);
+}
+
+export function getDepartment(id: number) {
+  return request<Department>(`${API_BASE}/departments/${id}`);
+}
+
+export function createDepartment(department: Partial<Department>) {
+  return request<Department>(`${API_BASE}/departments`, {
+    method: "POST",
+    body: JSON.stringify(department),
+  });
+}
+
+export function updateDepartment(id: number, department: Partial<Department>) {
+  return request<Department>(`${API_BASE}/departments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(department),
+  });
+}
+
+export function deleteDepartment(id: number) {
+  return request<void>(`${API_BASE}/departments/${id}`, {
     method: "DELETE",
   });
 }

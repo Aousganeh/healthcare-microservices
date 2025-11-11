@@ -19,8 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getAllUsers, updateUserRole, getSpecializations, createSpecialization, updateSpecialization, deleteSpecialization, type User } from "@/lib/api";
-import type { Specialization } from "@/types/api";
+import { getAllUsers, updateUserRole, getSpecializations, createSpecialization, updateSpecialization, deleteSpecialization, getDepartments, createDepartment, updateDepartment, deleteDepartment, type User } from "@/lib/api";
+import type { Department, Specialization } from "@/types/api";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
@@ -34,6 +34,11 @@ const AdminDashboard = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState<Specialization | null>(null);
   const [isSpecializationDialogOpen, setIsSpecializationDialogOpen] = useState(false);
   const [specializationFormData, setSpecializationFormData] = useState({ name: "", description: "", active: true });
+  
+  const [departmentSearch, setDepartmentSearch] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+  const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
+  const [departmentFormData, setDepartmentFormData] = useState({ name: "", description: "", active: true });
   
   const queryClient = useQueryClient();
 
@@ -52,6 +57,14 @@ const AdminDashboard = () => {
   } = useQuery({
     queryKey: ["specializations"],
     queryFn: getSpecializations,
+  });
+
+  const {
+    data: departments = [],
+    isLoading: isLoadingDepartments,
+  } = useQuery({
+    queryKey: ["departments"],
+    queryFn: getDepartments,
   });
 
   const updateRoleMutation = useMutation({
@@ -115,6 +128,51 @@ const AdminDashboard = () => {
     },
   });
 
+  const createDepartmentMutation = useMutation({
+    mutationFn: (data: Partial<Department>) => createDepartment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      toast.success("Department created successfully");
+      setIsDepartmentDialogOpen(false);
+      setDepartmentFormData({ name: "", description: "", active: true });
+      setSelectedDepartment(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to create department", {
+        description: error.message,
+      });
+    },
+  });
+
+  const updateDepartmentMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Department> }) => updateDepartment(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      toast.success("Department updated successfully");
+      setIsDepartmentDialogOpen(false);
+      setDepartmentFormData({ name: "", description: "", active: true });
+      setSelectedDepartment(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update department", {
+        description: error.message,
+      });
+    },
+  });
+
+  const deleteDepartmentMutation = useMutation({
+    mutationFn: (id: number) => deleteDepartment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      toast.success("Department deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to delete department", {
+        description: error.message,
+      });
+    },
+  });
+
   const filteredUsers = users.filter((user: User) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,6 +187,11 @@ const AdminDashboard = () => {
   const filteredSpecializations = specializations.filter((spec: Specialization) => {
     return spec.name.toLowerCase().includes(specializationSearch.toLowerCase()) ||
            (spec.description ?? "").toLowerCase().includes(specializationSearch.toLowerCase());
+  });
+
+  const filteredDepartments = departments.filter((dept: Department) => {
+    return dept.name.toLowerCase().includes(departmentSearch.toLowerCase()) ||
+           (dept.description ?? "").toLowerCase().includes(departmentSearch.toLowerCase());
   });
 
   const uniqueRoles = Array.from(new Set(users.flatMap((user: User) => user.roles))).sort();
@@ -179,6 +242,38 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleOpenDepartmentDialog = (department?: Department) => {
+    if (department) {
+      setSelectedDepartment(department);
+      setDepartmentFormData({
+        name: department.name,
+        description: department.description || "",
+        active: department.active ?? true,
+      });
+    } else {
+      setSelectedDepartment(null);
+      setDepartmentFormData({ name: "", description: "", active: true });
+    }
+    setIsDepartmentDialogOpen(true);
+  };
+
+  const handleSaveDepartment = () => {
+    if (selectedDepartment) {
+      updateDepartmentMutation.mutate({
+        id: selectedDepartment.id,
+        data: departmentFormData,
+      });
+    } else {
+      createDepartmentMutation.mutate(departmentFormData);
+    }
+  };
+
+  const handleDeleteDepartment = (id: number) => {
+    if (confirm("Are you sure you want to delete this department?")) {
+      deleteDepartmentMutation.mutate(id);
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     if (role === "ROLE_ADMIN") return "destructive";
     if (role === "ROLE_DOCTOR") return "default";
@@ -203,9 +298,10 @@ const AdminDashboard = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <Tabs defaultValue="users" className="w-full">
-              <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+              <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
                 <TabsTrigger value="users">Users</TabsTrigger>
                 <TabsTrigger value="specializations">Specializations</TabsTrigger>
+                <TabsTrigger value="departments">Departments</TabsTrigger>
               </TabsList>
 
               <TabsContent value="users">
@@ -384,6 +480,93 @@ const AdminDashboard = () => {
                 {!isLoadingSpecializations && (
                   <div className="mt-6 text-sm text-muted-foreground text-center">
                     Total specializations: {specializations.length} | Filtered: {filteredSpecializations.length}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="departments">
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search departments..."
+                      className="pl-9"
+                      value={departmentSearch}
+                      onChange={(e) => setDepartmentSearch(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => handleOpenDepartmentDialog()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Department
+                  </Button>
+                </div>
+
+                {isLoadingDepartments ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2 text-muted-foreground">Loading departments...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredDepartments.map((dept: Department) => (
+                      <Card key={dept.id} className="hover:shadow-glow transition-all duration-300">
+                        <CardHeader>
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="flex-1">
+                              <CardTitle className="flex items-center gap-2 mb-2">
+                                <Award className="h-5 w-5 text-primary" />
+                                {dept.name}
+                              </CardTitle>
+                              {dept.description && (
+                                <p className="text-sm text-muted-foreground mb-3">{dept.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant={dept.active ? "default" : "secondary"}>
+                                  {dept.active ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenDepartmentDialog(dept)}
+                                disabled={updateDepartmentMutation.isPending || deleteDepartmentMutation.isPending}
+                                className="w-full sm:w-auto"
+                              >
+                                <Edit2 className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteDepartment(dept.id)}
+                                disabled={deleteDepartmentMutation.isPending}
+                                className="w-full sm:w-auto"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {!isLoadingDepartments && filteredDepartments.length === 0 && (
+                  <div className="mt-6 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center">
+                    <p className="text-muted-foreground">
+                      No departments found. Create your first department to get started.
+                    </p>
+                  </div>
+                )}
+
+                {!isLoadingDepartments && (
+                  <div className="mt-6 text-sm text-muted-foreground text-center">
+                    Total departments: {departments.length} | Filtered: {filteredDepartments.length}
                   </div>
                 )}
               </TabsContent>

@@ -5,6 +5,13 @@ export interface Specialization {
   active?: boolean;
 }
 
+export interface Department {
+  id: number;
+  name: string;
+  description?: string;
+  active?: boolean;
+}
+
 export interface Doctor {
   id?: number;
   name: string;
@@ -12,6 +19,8 @@ export interface Doctor {
   specializationId?: number;
   specializationName?: string;
   specialization?: string;
+  departmentId?: number;
+  departmentName?: string;
   department?: string;
   dutyStatus?: string;
   yearsOfExperience?: number;

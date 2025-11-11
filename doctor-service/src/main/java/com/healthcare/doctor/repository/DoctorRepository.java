@@ -18,7 +18,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Integer> {
     
     List<Doctor> findBySpecialization(Specialization specialization);
     
-    List<Doctor> findByDepartment(String department);
+    List<Doctor> findByDepartment(com.healthcare.doctor.entity.Department department);
     
     List<Doctor> findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(String name, String surname);
     
