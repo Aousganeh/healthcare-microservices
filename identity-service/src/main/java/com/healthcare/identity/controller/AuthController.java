@@ -34,20 +34,26 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse httpResponse) {
         AuthResponse resp = authService.register(request);
-        ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(resp);
+        if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
+            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(resp);
+        }
+        return ResponseEntity.ok(resp);
     }
 
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT token")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse resp = authService.login(request);
-        ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(resp);
+        if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
+            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(resp);
+        }
+        return ResponseEntity.ok(resp);
     }
     
     @Operation(summary = "Register doctor", description = "Creates a doctor user account and returns JWT token")
@@ -58,10 +64,13 @@ public class AuthController {
         String firstName = request.get("firstName");
         String lastName = request.get("lastName");
         AuthResponse resp = authService.registerDoctor(email, password, firstName, lastName);
-        ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(resp);
+        if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
+            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(resp);
+        }
+        return ResponseEntity.ok(resp);
     }
     
     @Operation(summary = "Update user role", description = "Updates a user's role (Admin only)")

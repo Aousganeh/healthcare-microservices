@@ -225,8 +225,16 @@ public class AuthService {
 
     private AuthResponse generateAuthResponse(User user, String refreshTokenOverride) {
         String token = jwtUtil.generateToken(user);
-        String refreshToken = refreshTokenOverride != null ? refreshTokenOverride
-                : refreshTokenService.issue(String.valueOf(user.getId()), null, null);
+        String refreshToken;
+        if (refreshTokenOverride != null) {
+            refreshToken = refreshTokenOverride;
+        } else {
+            try {
+                refreshToken = refreshTokenService.issue(String.valueOf(user.getId()), null, null);
+            } catch (Exception ex) {
+                refreshToken = null;
+            }
+        }
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
