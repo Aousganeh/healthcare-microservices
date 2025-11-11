@@ -27,14 +27,18 @@ const DoctorsPage = () => {
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter((doctor: Doctor) => {
+      const specName = (doctor.specializationName || doctor.specialization || "").trim();
+      if (specName.toLowerCase() === "please change") {
+        return false;
+      }
       const departmentName = doctor.departmentName || doctor.department || "";
       const matchesSearch =
         `${doctor.name} ${doctor.surname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doctor.specializationName || doctor.specialization || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        specName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         departmentName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSpecialization =
         specializationFilter === "all" ||
-        (doctor.specializationName || doctor.specialization || "").toLowerCase() === specializationFilter.toLowerCase();
+        specName.toLowerCase() === specializationFilter.toLowerCase();
       return matchesSearch && matchesSpecialization;
     });
   }, [doctors, searchQuery, specializationFilter]);
@@ -42,8 +46,8 @@ const DoctorsPage = () => {
   const uniqueSpecializations = useMemo(() => {
     const specializations = new Set<string>();
     doctors.forEach((doctor: Doctor) => {
-      const spec = doctor.specializationName || doctor.specialization;
-      if (spec) {
+      const spec = (doctor.specializationName || doctor.specialization || "").trim();
+      if (spec && spec.toLowerCase() !== "please change") {
         specializations.add(spec);
       }
     });
