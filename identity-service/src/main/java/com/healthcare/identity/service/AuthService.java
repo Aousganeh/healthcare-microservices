@@ -164,6 +164,17 @@ public class AuthService {
         
         if ("ROLE_DOCTOR".equals(roleName)) {
             createDoctorProfileIfNotExists(user);
+        } else {
+            try {
+                Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(user.getEmail());
+                if (doctor != null && doctor.get("id") != null) {
+                    Integer doctorId = (doctor.get("id") instanceof Number)
+                            ? ((Number) doctor.get("id")).intValue()
+                            : Integer.valueOf(doctor.get("id").toString());
+                    doctorServiceClient.deleteDoctor(doctorId);
+                }
+            } catch (Exception ignore) {
+            }
         }
         
         return user;
@@ -189,6 +200,17 @@ public class AuthService {
         
         if ("ROLE_DOCTOR".equals(roleName)) {
             createDoctorProfileIfNotExists(user);
+        } else {
+            try {
+                Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(user.getEmail());
+                if (doctor != null && doctor.get("id") != null) {
+                    Integer doctorId = (doctor.get("id") instanceof Number)
+                            ? ((Number) doctor.get("id")).intValue()
+                            : Integer.valueOf(doctor.get("id").toString());
+                    doctorServiceClient.deleteDoctor(doctorId);
+                }
+            } catch (Exception ignore) {
+            }
         }
         
         return user;
