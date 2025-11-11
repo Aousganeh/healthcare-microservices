@@ -419,6 +419,105 @@ const DoctorDashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            <Card className="shadow-large mt-8">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Calendar className="h-6 w-6 text-primary" />
+                      All Appointments
+                    </CardTitle>
+                    <CardDescription>Complete history of all your appointments</CardDescription>
+                  </div>
+                  {isLoadingAppointments && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {allAppointments.length ? (
+                  allAppointments.map((appointment: AppointmentDetail) => {
+                    const appointmentDate = new Date(appointment.appointmentDate);
+                    const isPast = appointmentDate < new Date();
+                    const getStatusBadgeVariant = (status?: string) => {
+                      switch (status) {
+                        case "PENDING":
+                          return "bg-yellow-100 text-yellow-800 border-yellow-300";
+                        case "SCHEDULED":
+                        case "CONFIRMED":
+                          return "bg-blue-100 text-blue-800 border-blue-300";
+                        case "IN_PROGRESS":
+                          return "bg-purple-100 text-purple-800 border-purple-300";
+                        case "COMPLETED":
+                          return "bg-green-100 text-green-800 border-green-300";
+                        case "CANCELLED":
+                          return "bg-gray-100 text-gray-800 border-gray-300";
+                        case "REJECTED":
+                          return "bg-red-100 text-red-800 border-red-300";
+                        case "NO_SHOW":
+                          return "bg-orange-100 text-orange-800 border-orange-300";
+                        default:
+                          return "";
+                      }
+                    };
+                    return (
+                      <Card key={appointment.id} className="hover:shadow-medium transition-all">
+                        <CardContent className="p-4">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="space-y-1 flex-1">
+                              <h4 className="font-semibold text-lg">
+                                {appointment.patientName || "Patient"}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {appointment.reason || "Consultation"}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-3 text-sm mt-2">
+                                <Badge variant="secondary">
+                                  {appointmentDate.toLocaleDateString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </Badge>
+                                <Badge variant="outline">
+                                  {appointmentDate.toLocaleTimeString(undefined, {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </Badge>
+                                {appointment.status && (
+                                  <Badge variant="outline" className={getStatusBadgeVariant(appointment.status)}>
+                                    {appointment.status}
+                                  </Badge>
+                                )}
+                                {isPast && (
+                                  <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+                                    Past
+                                  </Badge>
+                                )}
+                              </div>
+                              {appointment.patientEmail && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {appointment.patientEmail}
+                                </p>
+                              )}
+                              {appointment.notes && (
+                                <p className="text-xs text-muted-foreground mt-1 italic">
+                                  {appointment.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                ) : (
+                  <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center">
+                    <p className="text-muted-foreground">No appointments found.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </section>
       </main>
