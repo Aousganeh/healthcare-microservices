@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { WorkingDaysSelector } from "@/components/WorkingDaysSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getDoctors, updateDoctor, getActiveSpecializations } from "@/lib/api";
+import { getDoctors, updateDoctor, getActiveSpecializations, getActiveDepartments } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatWorkingDays, parseWorkingDays, DAYS_OF_WEEK } from "@/utils/workingDays";
 import type { Doctor } from "@/types/api";
@@ -56,7 +56,7 @@ const Profile = () => {
     name: "",
     surname: "",
     specializationId: 0,
-    department: "",
+    departmentId: 0,
     phoneNumber: "",
     qualifications: "",
     workingHoursStart: "",
@@ -96,7 +96,7 @@ const Profile = () => {
         name: doctor.name || "",
         surname: doctor.surname || "",
         specializationId: doctor.specializationId || 0,
-        department: doctor.department || "",
+        departmentId: doctor.departmentId || 0,
         phoneNumber: doctor.phoneNumber || "",
         qualifications: doctor.qualifications || "",
         workingHoursStart: formatTimeForInput(doctor.workingHoursStart),
@@ -118,7 +118,7 @@ const Profile = () => {
         licenseNumber: doctor.licenseNumber,
         email: doctor.email,
         phoneNumber: formData.phoneNumber,
-        department: formData.department,
+        departmentId: formData.departmentId || undefined,
         dutyStatus: doctor.dutyStatus,
         yearsOfExperience: doctor.yearsOfExperience,
         qualifications: formData.qualifications,
@@ -456,11 +456,22 @@ const Profile = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
-                  <Input
-                    id="department"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  />
+                  <Select
+                    value={formData.departmentId ? formData.departmentId.toString() : ""}
+                    onValueChange={(value) => setFormData({ ...formData, departmentId: value ? parseInt(value) : 0 })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a department (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
