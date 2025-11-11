@@ -118,29 +118,7 @@ const Dashboard = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                {!isDoctor && !isAdmin && patientDetail && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => {
-                      setIsEditingProfile((v) => {
-                        const next = !v;
-                        if (!v) {
-                          setDraftProfile({
-                            name: patientDetail?.name ?? "",
-                            surname: patientDetail?.surname ?? "",
-                            phoneNumber: patientDetail?.phoneNumber ?? "",
-                            dateOfBirth: patientDetail?.dateOfBirth ?? "",
-                            gender: (patientDetail as any)?.gender ?? "MALE",
-                          });
-                        }
-                        return next;
-                      });
-                    }}
-                  >
-                    {isEditingProfile ? "Cancel" : "Edit Profile"}
-                  </Button>
-                )}
+                {/* moved patient Edit Profile to /profile */}
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/booking">
                     Book New Appointment
@@ -153,86 +131,7 @@ const Dashboard = () => {
 
         <section className="py-8">
           <div className="container mx-auto px-4 space-y-6">
-            {!isDoctor && !isAdmin && isEditingProfile && patientDetail && (
-              <div className="rounded-xl border p-6 shadow-large">
-                <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground">First name</label>
-                    <input
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={draftProfile.name}
-                      onChange={(e) => setDraftProfile((p) => ({ ...p, name: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Last name</label>
-                    <input
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={draftProfile.surname}
-                      onChange={(e) => setDraftProfile((p) => ({ ...p, surname: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Phone</label>
-                    <input
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={draftProfile.phoneNumber || ""}
-                      onChange={(e) => setDraftProfile((p) => ({ ...p, phoneNumber: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Date of birth</label>
-                    <input
-                      type="date"
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={draftProfile.dateOfBirth || ""}
-                      onChange={(e) => setDraftProfile((p) => ({ ...p, dateOfBirth: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Gender</label>
-                    <select
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                      value={draftProfile.gender || "MALE"}
-                      onChange={(e) => setDraftProfile((p) => ({ ...p, gender: e.target.value as any }))}
-                    >
-                      <option value="MALE">Male</option>
-                      <option value="FEMALE">Female</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-4 flex gap-3">
-                  <Button
-                    variant="hero"
-                    onClick={() =>
-                      updatePatientMutation.mutate({
-                        name: draftProfile.name || undefined,
-                        surname: draftProfile.surname || undefined,
-                        phoneNumber: draftProfile.phoneNumber || undefined,
-                        dateOfBirth: draftProfile.dateOfBirth || undefined,
-                        gender: draftProfile.gender || undefined,
-                        email: patientDetail.email, // keep same email
-                      } as any)
-                    }
-                    disabled={updatePatientMutation.isPending}
-                  >
-                    {updatePatientMutation.isPending ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Saving...
-                      </span>
-                    ) : (
-                      "Save Changes"
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
+            {/* moved patient Edit Profile to /profile */}
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Health Metrics</h2>
               {isLoadingMetrics && (

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { WorkingDaysSelector } from "@/components/WorkingDaysSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getDoctors, updateDoctor, getActiveSpecializations, getActiveDepartments } from "@/lib/api";
+import { getDoctors, updateDoctor, getActiveSpecializations, getActiveDepartments, getPatientByEmail, updatePatient } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatWorkingDays, parseWorkingDays, DAYS_OF_WEEK } from "@/utils/workingDays";
 import type { Doctor } from "@/types/api";
@@ -29,6 +29,14 @@ const Profile = () => {
   const { user, isDoctor } = useAuth();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPatientEditing, setIsPatientEditing] = useState(false);
+  const [patientDraft, setPatientDraft] = useState<{ name: string; surname: string; phoneNumber?: string; dateOfBirth?: string; gender?: "MALE" | "FEMALE" | "OTHER" }>({
+    name: "",
+    surname: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    gender: "MALE",
+  });
 
   const {
     data: doctors = [],
@@ -59,6 +67,21 @@ const Profile = () => {
     if (!isDoctor) return null;
     return doctors.find((d: Doctor) => d.email === user?.email);
   }, [doctors, user?.email, isDoctor]);
+
+  const { data: patientProfile } = useQuery({
+    queryKey: ["patient", "email", user?.email],
+    queryFn: () => getPatientByEmail(user!.email!),
+    enabled: !isDoctor && !!user?.email,
+    retry: false,
+  });
+
+  const updatePatientMutation = useMutation({
+    mutationFn: (payload: any) => updatePatient(patientProfile!.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient", "email", user?.email] });
+      setIsPatientEditing(false);
+    },
+  });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -171,6 +194,28 @@ const Profile = () => {
                 <Button variant="outline" onClick={handleEditClick}>
                   <Edit2 className="h-4 w-4 mr-2" />
                   Edit Profile
+                </Button>
+              )}
+              {!isDoctor && patientProfile && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsPatientEditing((v) => {
+                      const next = !v;
+                      if (!v) {
+                        setPatientDraft({
+                          name: patientProfile?.name ?? "",
+                          surname: patientProfile?.surname ?? "",
+                          phoneNumber: patientProfile?.phoneNumber ?? "",
+                          dateOfBirth: patientProfile?.dateOfBirth ?? "",
+                          gender: (patientProfile as any)?.gender ?? "MALE",
+                        });
+                      }
+                      return next;
+                    });
+                  }}
+                >
+                  {isPatientEditing ? "Cancel" : "Edit Profile"}
                 </Button>
               )}
             </div>
@@ -346,6 +391,68 @@ const Profile = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {!isDoctor && isPatientEditing && patientProfile && (
+                      <div className="rounded-lg border p-4 space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-sm text-muted-foreground">First name</Label>
+                            <Input value={patientDraft.name} onChange={(e) => setPatientDraft((p) => ({ ...p, name: e.target.value }))} />
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Last name</Label>
+                            <Input value={patientDraft.surname} onChange={(e) => setPatientDraft((p) => ({ ...p, surname: e.target.value }))} />
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Phone</Label>
+                            <Input value={patientDraft.phoneNumber || ""} onChange={(e) => setPatientDraft((p) => ({ ...p, phoneNumber: e.target.value }))} />
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Date of birth</Label>
+                            <Input type="date" value={patientDraft.dateOfBirth || ""} onChange={(e) => setPatientDraft((p) => ({ ...p, dateOfBirth: e.target.value }))} />
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Gender</Label>
+                            <select
+                              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                              value={patientDraft.gender || "MALE"}
+                              onChange={(e) => setPatientDraft((p) => ({ ...p, gender: e.target.value as any }))}
+                            >
+                              <option value="MALE">Male</option>
+                              <option value="FEMALE">Female</option>
+                              <option value="OTHER">Other</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button
+                            variant="hero"
+                            onClick={() =>
+                              updatePatientMutation.mutate({
+                                name: patientDraft.name || undefined,
+                                surname: patientDraft.surname || undefined,
+                                phoneNumber: patientDraft.phoneNumber || undefined,
+                                dateOfBirth: patientDraft.dateOfBirth || undefined,
+                                gender: patientDraft.gender || undefined,
+                                email: patientProfile.email,
+                              })
+                            }
+                            disabled={updatePatientMutation.isPending}
+                          >
+                            {updatePatientMutation.isPending ? (
+                              <span className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Saving...
+                              </span>
+                            ) : (
+                              "Save Changes"
+                            )}
+                          </Button>
+                          <Button variant="outline" onClick={() => setIsPatientEditing(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <Mail className="h-5 w-5 text-primary" />
                       <div>
