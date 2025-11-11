@@ -518,6 +518,20 @@ const Profile = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <WorkingDaysSelector 
+                  value={formData.workingDays} 
+                  onChange={(value) => {
+                    const newFormData = { ...formData, workingDays: value };
+                    if (!value || value.trim() === "") {
+                      newFormData.workingHoursStart = "";
+                      newFormData.workingHoursEnd = "";
+                    }
+                    setFormData(newFormData);
+                  }} 
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="workingHoursStart">
@@ -545,21 +559,6 @@ const Profile = () => {
                     required={formData.workingDays && formData.workingDays.trim() !== ""}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Working Days</Label>
-                <WorkingDaysSelector 
-                  value={formData.workingDays} 
-                  onChange={(value) => {
-                    const newFormData = { ...formData, workingDays: value };
-                    if (!value || value.trim() === "") {
-                      newFormData.workingHoursStart = "";
-                      newFormData.workingHoursEnd = "";
-                    }
-                    setFormData(newFormData);
-                  }} 
-                />
               </div>
 
               <div className="space-y-2">
