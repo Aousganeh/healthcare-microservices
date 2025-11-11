@@ -57,10 +57,6 @@ spring:
             - StripPrefix=1
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-        - name: AddRequestHeader
-          args:
-            name: Authorization
-            value: "Bearer #{request?.cookies?.getFirst('access_token')?.value}"
       globalcors:
         corsConfigurations:
           '[/**]':
