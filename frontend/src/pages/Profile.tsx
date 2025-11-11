@@ -215,7 +215,7 @@ const Profile = () => {
                             Dr. {doctor.name} {doctor.surname}
                           </h1>
                           <Badge variant="secondary" className="text-base px-3 py-1">
-                            {doctor.specialization}
+                            {doctor.specializationName || doctor.specialization || "General Practice"}
                           </Badge>
                         </div>
 
