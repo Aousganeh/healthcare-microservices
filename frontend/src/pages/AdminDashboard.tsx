@@ -703,6 +703,79 @@ const AdminDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isDepartmentDialogOpen} onOpenChange={setIsDepartmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDepartment ? "Edit Department" : "Create Department"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDepartment
+                ? "Update the department details"
+                : "Add a new department that doctors can be assigned to"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="dept-name">Name *</Label>
+              <Input
+                id="dept-name"
+                value={departmentFormData.name}
+                onChange={(e) => setDepartmentFormData({ ...departmentFormData, name: e.target.value })}
+                placeholder="e.g., Cardiology"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dept-description">Description</Label>
+              <Textarea
+                id="dept-description"
+                value={departmentFormData.description}
+                onChange={(e) => setDepartmentFormData({ ...departmentFormData, description: e.target.value })}
+                placeholder="Department description..."
+                rows={3}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="dept-active"
+                checked={departmentFormData.active}
+                onChange={(e) => setDepartmentFormData({ ...departmentFormData, active: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="dept-active" className="text-sm font-normal cursor-pointer">
+                Active
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDepartmentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveDepartment}
+              disabled={
+                createDepartmentMutation.isPending ||
+                updateDepartmentMutation.isPending ||
+                !departmentFormData.name.trim()
+              }
+            >
+              {(createDepartmentMutation.isPending || updateDepartmentMutation.isPending) ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {selectedDepartment ? "Updating..." : "Creating..."}
+                </>
+              ) : selectedDepartment ? (
+                "Update Department"
+              ) : (
+                "Create Department"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
