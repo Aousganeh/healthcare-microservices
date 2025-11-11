@@ -255,12 +255,12 @@ const DoctorProfile = () => {
                         </div>
                       </div>
 
-                      {doctor.department && (
+                      {(doctor.departmentName || doctor.department) && (
                         <div className="flex items-center gap-3">
                           <MapPin className="h-5 w-5 text-primary" />
                           <div>
                             <p className="text-sm text-muted-foreground">Department</p>
-                            <p className="font-medium">{doctor.department}</p>
+                            <p className="font-medium">{doctor.departmentName || doctor.department}</p>
                           </div>
                         </div>
                       )}

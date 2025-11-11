@@ -27,13 +27,14 @@ const DoctorsPage = () => {
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter((doctor: Doctor) => {
+      const departmentName = doctor.departmentName || doctor.department || "";
       const matchesSearch =
         `${doctor.name} ${doctor.surname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doctor.specialization ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doctor.department ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+        (doctor.specializationName || doctor.specialization || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        departmentName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSpecialization =
         specializationFilter === "all" ||
-        (doctor.specialization ?? "").toLowerCase() === specializationFilter.toLowerCase();
+        (doctor.specializationName || doctor.specialization || "").toLowerCase() === specializationFilter.toLowerCase();
       return matchesSearch && matchesSpecialization;
     });
   }, [doctors, searchQuery, specializationFilter]);
@@ -108,7 +109,8 @@ const DoctorsPage = () => {
                     doctor.yearsOfExperience != null
                       ? `${doctor.yearsOfExperience} years experience`
                       : "Experience N/A";
-                  const specialization = doctor.specialization ?? "General Practice";
+                  const specialization = doctor.specializationName || doctor.specialization || "General Practice";
+                  const departmentName = doctor.departmentName || doctor.department;
 
                   return (
                     <Card key={doctor.id} className="hover:shadow-glow transition-all duration-300">
@@ -145,10 +147,10 @@ const DoctorsPage = () => {
                             <Badge variant="secondary" className="mb-2">
                               {specialization}
                             </Badge>
-                            {doctor.department && (
+                            {departmentName && (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <MapPin className="h-3 w-3" />
-                                <span>{doctor.department}</span>
+                                <span>{departmentName}</span>
                               </div>
                             )}
                           </div>

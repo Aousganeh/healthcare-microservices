@@ -47,6 +47,14 @@ const Profile = () => {
     enabled: isDoctor,
   });
 
+  const {
+    data: departments = [],
+  } = useQuery({
+    queryKey: ["departments", "active"],
+    queryFn: getActiveDepartments,
+    enabled: isDoctor,
+  });
+
   const doctor = useMemo(() => {
     if (!isDoctor) return null;
     return doctors.find((d: Doctor) => d.email === user?.email);
@@ -237,12 +245,12 @@ const Profile = () => {
                           </div>
                         </div>
 
-                        {doctor.department && (
+                        {(doctor.departmentName || doctor.department) && (
                           <div className="flex items-center gap-3">
                             <MapPin className="h-5 w-5 text-primary" />
                             <div>
                               <p className="text-sm text-muted-foreground">Department</p>
-                              <p className="font-medium">{doctor.department}</p>
+                              <p className="font-medium">{doctor.departmentName || doctor.department}</p>
                             </div>
                           </div>
                         )}

@@ -13,7 +13,8 @@ export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
   const initials = `${doctor.name?.charAt(0) ?? ""}${doctor.surname?.charAt(0) ?? ""}`.toUpperCase();
   const experienceLabel =
     doctor.yearsOfExperience != null ? `${doctor.yearsOfExperience} years experience` : "Experience N/A";
-  const specialization = doctor.specialization ?? "General Practice";
+  const specialization = doctor.specializationName || doctor.specialization || "General Practice";
+  const departmentName = doctor.departmentName || doctor.department;
 
   return (
     <Card className="hover:shadow-glow transition-all duration-300 cursor-pointer group">
@@ -51,9 +52,9 @@ export const DoctorCard = ({ doctor, onBook }: DoctorCardProps) => {
               <Badge variant="secondary" className="mb-2">
                 {specialization}
               </Badge>
-              {doctor.department && (
+              {departmentName && (
                 <div className="text-sm text-muted-foreground">
-                  Department: <span className="font-medium text-foreground">{doctor.department}</span>
+                  Department: <span className="font-medium text-foreground">{departmentName}</span>
               </div>
               )}
             </div>
