@@ -467,14 +467,14 @@ const Profile = () => {
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
                   <Select
-                    value={formData.departmentId ? formData.departmentId.toString() : ""}
-                    onValueChange={(value) => setFormData({ ...formData, departmentId: value ? parseInt(value) : 0 })}
+                    value={formData.departmentId && formData.departmentId > 0 ? formData.departmentId.toString() : "none"}
+                    onValueChange={(value) => setFormData({ ...formData, departmentId: value === "none" ? 0 : parseInt(value) })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a department (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {departments.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id.toString()}>
                           {dept.name}
