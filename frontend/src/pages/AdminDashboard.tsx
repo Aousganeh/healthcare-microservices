@@ -19,7 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getAllUsers, updateUserRole, getSpecializations, createSpecialization, updateSpecialization, deleteSpecialization, type User, type Specialization } from "@/lib/api";
+import { getAllUsers, updateUserRole, getSpecializations, createSpecialization, updateSpecialization, deleteSpecialization, type User } from "@/lib/api";
+import type { Specialization } from "@/types/api";
 import { toast } from "sonner";
 
 const AdminDashboard = () => {
