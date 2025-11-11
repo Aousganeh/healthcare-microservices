@@ -435,25 +435,25 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="specialization">Specialization *</Label>
-                <Select
-                  value={formData.specializationId.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, specializationId: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a specialization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {specializations.map((spec) => (
-                      <SelectItem key={spec.id} value={spec.id.toString()}>
-                        {spec.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="specialization">Specialization *</Label>
+                  <Select
+                    value={formData.specializationId.toString()}
+                    onValueChange={(value) => setFormData({ ...formData, specializationId: parseInt(value) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a specialization" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specializations.map((spec) => (
+                        <SelectItem key={spec.id} value={spec.id.toString()}>
+                          {spec.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
                   <Input
