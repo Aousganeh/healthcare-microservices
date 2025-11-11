@@ -15,7 +15,7 @@ import { getDoctors, getPatientByEmail, createAppointment } from "@/lib/api";
 import type { AppointmentPayload, Doctor } from "@/types/api";
 
 const Booking = () => {
-  const { user } = useAuth();
+  const { user, isDoctor, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +48,7 @@ const Booking = () => {
   } = useQuery({
     queryKey: ["patient", "email", user?.email],
     queryFn: () => getPatientByEmail(user!.email!),
-    enabled: !!user?.email,
+    enabled: !!user?.email && !isAdmin && !isDoctor,
     retry: false,
   });
 
@@ -199,7 +199,7 @@ const Booking = () => {
                   <AppointmentForm
                     doctor={selectedDoctor}
                     patientId={patient.id}
-                    onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload)}
+                    onSubmit={(payload) => createAppointmentMutation.mutateAsync(payload).then(() => {})}
                   />
                 ) : null}
               </div>

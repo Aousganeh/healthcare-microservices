@@ -16,7 +16,7 @@ import { getAppointmentsByPatient, getDoctors, getHealthMetrics, getPatientByEma
 import type { AppointmentDetail, Doctor } from "@/types/api";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isDoctor, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetail | null>(null);
@@ -28,7 +28,7 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ["patient", "email", user?.email],
     queryFn: () => getPatientByEmail(user!.email!),
-    enabled: !!user?.email,
+    enabled: !!user?.email && !isAdmin && !isDoctor,
     retry: false,
   });
 
