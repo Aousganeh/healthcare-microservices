@@ -42,8 +42,9 @@ const DoctorsPage = () => {
   const uniqueSpecializations = useMemo(() => {
     const specializations = new Set<string>();
     doctors.forEach((doctor: Doctor) => {
-      if (doctor.specialization) {
-        specializations.add(doctor.specialization);
+      const spec = doctor.specializationName || doctor.specialization;
+      if (spec) {
+        specializations.add(spec);
       }
     });
     return Array.from(specializations).sort();
