@@ -34,26 +34,24 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse httpResponse) {
         AuthResponse resp = authService.register(request);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
-            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(resp);
+            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(resp.getRefreshToken()).toString());
         }
-        return ResponseEntity.ok(resp);
+        builder.header(HttpHeaders.SET_COOKIE, buildAccessCookie(resp.getToken()).toString());
+        return builder.body(resp);
     }
 
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT token")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse resp = authService.login(request);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
-            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(resp);
+            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(resp.getRefreshToken()).toString());
         }
-        return ResponseEntity.ok(resp);
+        builder.header(HttpHeaders.SET_COOKIE, buildAccessCookie(resp.getToken()).toString());
+        return builder.body(resp);
     }
     
     @Operation(summary = "Register doctor", description = "Creates a doctor user account and returns JWT token")
@@ -64,13 +62,12 @@ public class AuthController {
         String firstName = request.get("firstName");
         String lastName = request.get("lastName");
         AuthResponse resp = authService.registerDoctor(email, password, firstName, lastName);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (resp.getRefreshToken() != null && !resp.getRefreshToken().isBlank()) {
-            ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(resp);
+            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(resp.getRefreshToken()).toString());
         }
-        return ResponseEntity.ok(resp);
+        builder.header(HttpHeaders.SET_COOKIE, buildAccessCookie(resp.getToken()).toString());
+        return builder.body(resp);
     }
     
     @Operation(summary = "Update user role", description = "Updates a user's role (Admin only)")
@@ -137,10 +134,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         AuthResponse resp = authService.privateGenerateForExistingUser(user, rotated);
-        ResponseCookie cookie = buildRefreshCookie(resp.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(resp);
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
+        builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(resp.getRefreshToken()).toString());
+        builder.header(HttpHeaders.SET_COOKIE, buildAccessCookie(resp.getToken()).toString());
+        return builder.body(resp);
     }
 
     @Operation(summary = "Logout", description = "Revokes refresh token and clears cookie")
@@ -168,6 +165,16 @@ public class AuthController {
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(60L * 60 * 24 * 30)
+                .build();
+    }
+
+    private ResponseCookie buildAccessCookie(String value) {
+        return ResponseCookie.from("access_token", value)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(60L * 15)
                 .build();
     }
 }

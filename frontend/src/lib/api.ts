@@ -13,22 +13,18 @@ import type {
 const API_BASE = "/api";
 
 function getAuthToken(): string | null {
-  return localStorage.getItem("auth_token");
+  return null;
 }
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const token = getAuthToken();
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(init?.headers ?? {}),
   };
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   const response = await fetch(input, {
     headers,
+    credentials: "include",
     ...init,
   });
 
@@ -111,17 +107,9 @@ export function getDoctorsBySpecialization(specialization: string) {
 }
 
 export async function getPatientByEmail(email: string): Promise<Patient | null> {
-  const token = getAuthToken();
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   const response = await fetch(`${API_BASE}/patients/email/${encodeURIComponent(email)}`, {
-    headers,
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
   if (response.status === 404) {

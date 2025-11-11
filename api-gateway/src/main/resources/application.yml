@@ -57,10 +57,15 @@ spring:
             - StripPrefix=1
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: AddRequestHeader
+          args:
+            name: Authorization
+            value: "Bearer #{request?.cookies?.getFirst('access_token')?.value}"
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:3000"
             allowedMethods:
               - GET
               - POST
@@ -69,7 +74,7 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
-            allowCredentials: false
+            allowCredentials: true
 
 eureka:
   client:
