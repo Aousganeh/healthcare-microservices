@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-jammy AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace/app
 
 COPY build.gradle settings.gradle* ./
@@ -15,8 +15,7 @@ RUN --mount=type=cache,target=/root/.gradle/caches \
     --mount=type=cache,target=/root/.gradle/wrapper \
     ./gradlew :patient-service:build -x test --no-daemon --build-cache --parallel
 
-FROM eclipse-temurin:17-jre-jammy
-VOLUME /tmp
+FROM gcr.io/distroless/java21-debian12:nonroot
 ARG JAR_FILE=patient-service/build/libs/*.jar
 COPY --from=build /workspace/app/${JAR_FILE} app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "/app.jar"]
