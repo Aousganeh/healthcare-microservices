@@ -6,14 +6,16 @@ COPY gradlew ./
 COPY gradle gradle
 RUN chmod +x ./gradlew
 
+RUN --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew --version || true
+
 COPY equipment-service/build.gradle equipment-service/
-RUN ./gradlew :equipment-service:dependencies --no-daemon || true
+
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :equipment-service:dependencies --no-daemon || true
 
 COPY equipment-service/src equipment-service/src
-ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true"
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :equipment-service:build -x test --no-daemon --build-cache --parallel
+
+ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :equipment-service:build -x test --no-daemon --build-cache --parallel
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 ARG JAR_FILE=equipment-service/build/libs/*.jar

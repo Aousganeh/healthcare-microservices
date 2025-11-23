@@ -6,14 +6,16 @@ COPY gradlew ./
 COPY gradle gradle
 RUN chmod +x ./gradlew
 
+RUN --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew --version || true
+
 COPY api-gateway/build.gradle api-gateway/
-RUN ./gradlew :api-gateway:dependencies --no-daemon || true
+
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :api-gateway:dependencies --no-daemon || true
 
 COPY api-gateway/src api-gateway/src
-ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true"
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :api-gateway:build -x test --no-daemon --build-cache --parallel
+
+ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :api-gateway:build -x test --no-daemon --build-cache --parallel
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 ARG JAR_FILE=api-gateway/build/libs/*.jar

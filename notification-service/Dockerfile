@@ -6,14 +6,16 @@ COPY gradlew ./
 COPY gradle gradle
 RUN chmod +x ./gradlew
 
+RUN --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew --version || true
+
 COPY notification-service/build.gradle notification-service/
-RUN ./gradlew :notification-service:dependencies --no-daemon || true
+
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :notification-service:dependencies --no-daemon || true
 
 COPY notification-service/src notification-service/src
-ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true"
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :notification-service:build -x test --no-daemon --build-cache --parallel
+
+ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
+RUN --mount=type=cache,target=/root/.gradle/caches     --mount=type=cache,target=/root/.gradle/wrapper     ./gradlew :notification-service:build -x test --no-daemon --build-cache --parallel
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 ARG JAR_FILE=notification-service/build/libs/*.jar
