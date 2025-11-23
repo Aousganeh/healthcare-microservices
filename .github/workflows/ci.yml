@@ -16,7 +16,19 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      services: ${{ steps.filter.outputs.services }}
+      api-gateway: ${{ steps.filter.outputs.api-gateway }}
+      service-discovery: ${{ steps.filter.outputs.service-discovery }}
+      config-server: ${{ steps.filter.outputs.config-server }}
+      identity-service: ${{ steps.filter.outputs.identity-service }}
+      patient-service: ${{ steps.filter.outputs.patient-service }}
+      doctor-service: ${{ steps.filter.outputs.doctor-service }}
+      appointment-service: ${{ steps.filter.outputs.appointment-service }}
+      billing-service: ${{ steps.filter.outputs.billing-service }}
+      room-service: ${{ steps.filter.outputs.room-service }}
+      equipment-service: ${{ steps.filter.outputs.equipment-service }}
+      notification-service: ${{ steps.filter.outputs.notification-service }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      root: ${{ steps.filter.outputs.root }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,6 +84,10 @@ jobs:
               - 'settings.gradle'
             frontend:
               - 'frontend/**'
+            root:
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
 
   # Build and test Java services in parallel
   build-services:
@@ -92,13 +108,26 @@ jobs:
           - room-service
           - equipment-service
           - notification-service
-    if: needs.detect-changes.outputs.services == '[]' || contains(needs.detect-changes.outputs.services, matrix.service)
     
     steps:
+      - name: Check if service should be built
+        id: should-build
+        run: |
+          CHANGED_SERVICES="${{ needs.detect-changes.outputs.services }}"
+          if [[ "$CHANGED_SERVICES" == "[]" ]] || [[ "$CHANGED_SERVICES" == *"${{ matrix.service }}"* ]]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✅ ${{ matrix.service }} will be built"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "⏭️  ${{ matrix.service }} has no changes, skipping"
+          fi
+
       - name: Checkout code
+        if: steps.should-build.outputs.should_build == 'true'
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
+        if: steps.should-build.outputs.should_build == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -106,6 +135,7 @@ jobs:
           cache: 'gradle'
 
       - name: Cache Gradle dependencies
+        if: steps.should-build.outputs.should_build == 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -116,16 +146,19 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
+        if: steps.should-build.outputs.should_build == 'true'
         run: chmod +x gradlew
 
       - name: Build with Gradle
+        if: steps.should-build.outputs.should_build == 'true'
         run: ./gradlew :${{ matrix.service }}:build -x test --no-daemon --build-cache --parallel
 
       - name: Run tests
+        if: steps.should-build.outputs.should_build == 'true'
         run: ./gradlew :${{ matrix.service }}:test --no-daemon --build-cache --parallel
 
       - name: Upload test results
-        if: always()
+        if: always() && steps.should-build.outputs.should_build == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.service }}
@@ -151,13 +184,53 @@ jobs:
           - room-service
           - equipment-service
           - notification-service
-    if: needs.detect-changes.outputs.services == '[]' || contains(needs.detect-changes.outputs.services, matrix.service)
     
     steps:
+      - name: Check if service should be built
+        id: should-build
+        run: |
+          SERVICE="${{ matrix.service }}"
+          ROOT_CHANGED="${{ needs.detect-changes.outputs.root }}"
+          
+          # Get the service-specific output
+          if [ "$SERVICE" == "api-gateway" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.api-gateway }}"
+          elif [ "$SERVICE" == "service-discovery" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.service-discovery }}"
+          elif [ "$SERVICE" == "config-server" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.config-server }}"
+          elif [ "$SERVICE" == "identity-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.identity-service }}"
+          elif [ "$SERVICE" == "patient-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.patient-service }}"
+          elif [ "$SERVICE" == "doctor-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.doctor-service }}"
+          elif [ "$SERVICE" == "appointment-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.appointment-service }}"
+          elif [ "$SERVICE" == "billing-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.billing-service }}"
+          elif [ "$SERVICE" == "room-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.room-service }}"
+          elif [ "$SERVICE" == "equipment-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.equipment-service }}"
+          elif [ "$SERVICE" == "notification-service" ]; then
+            SERVICE_CHANGED="${{ needs.detect-changes.outputs.notification-service }}"
+          fi
+          
+          if [[ "$SERVICE_CHANGED" == "true" ]] || [[ "$ROOT_CHANGED" == "true" ]]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✅ ${{ matrix.service }} will be built"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "⏭️  ${{ matrix.service }} has no changes, skipping"
+          fi
+
       - name: Checkout code
+        if: steps.should-build.outputs.should_build == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
+        if: steps.should-build.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -165,13 +238,14 @@ jobs:
             network=host
 
       - name: Log in to Docker Hub (if needed)
-        if: github.event_name != 'pull_request'
+        if: steps.should-build.outputs.should_build == 'true' && github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata
+        if: steps.should-build.outputs.should_build == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -183,6 +257,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
+        if: steps.should-build.outputs.should_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -200,7 +275,7 @@ jobs:
   build-frontend:
     needs: detect-changes
     runs-on: ubuntu-latest
-    if: needs.detect-changes.outputs.services == '[]' || contains(needs.detect-changes.outputs.services, 'frontend')
+    if: needs.detect-changes.outputs.frontend == 'true'
     
     steps:
       - name: Checkout code
