@@ -11,13 +11,11 @@ RUN npm run build
 
 FROM nginx:alpine
 
-# Remove default nginx config and copy custom one
 RUN rm -rf /etc/nginx/conf.d/default.conf
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user for nginx
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && \

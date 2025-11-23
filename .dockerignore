@@ -1,13 +1,10 @@
-# Git
 .git
 .gitignore
 .github
 
-# Documentation
 *.md
 docs/
 
-# IDE
 .idea
 .vscode
 *.iml
@@ -15,7 +12,6 @@ docs/
 *.swo
 *~
 
-# Build artifacts (we copy what we need in Dockerfile)
 **/build/
 **/target/
 **/out/
@@ -23,45 +19,35 @@ docs/
 **/node_modules/
 **/dist/
 
-# Logs
 *.log
 logs/
 
-# OS
 .DS_Store
 Thumbs.db
 
-# Docker
 docker-compose*.yml
 Dockerfile*
 .dockerignore
 
-# CI/CD
 .github/
 
-# Kubernetes
 k8s/
 
-# Scripts
 *.sh
 start.sh
 
-# Environment files
 .env
 .env.local
 .env.*.local
 
-# Test files
 **/test/
 **/__tests__/
 **/*.test.*
 **/*.spec.*
 
-# Coverage
 coverage/
 .nyc_output/
 
-# Temporary files
 tmp/
 temp/
 *.tmp
