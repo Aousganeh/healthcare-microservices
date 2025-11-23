@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.4
+# Optimized multi-stage build for service-discovery
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace/app
 
