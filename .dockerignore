@@ -13,6 +13,7 @@ docs/
 *~
 
 **/build/
+!**/build/libs/*.jar
 **/target/
 **/out/
 **/.gradle/

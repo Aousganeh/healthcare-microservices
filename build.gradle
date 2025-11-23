@@ -34,6 +34,12 @@ subprojects {
         }
     }
 
+    tasks.withType(Test) {
+        maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+        forkEvery = 10
+        useJUnitPlatform()
+    }
+
     apply plugin: 'org.springframework.boot'
 }
 
