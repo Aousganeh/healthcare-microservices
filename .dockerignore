@@ -1,15 +1,67 @@
-.gradle
-build
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+docs/
+
+# IDE
 .idea
 .vscode
 *.iml
-*.ipr
-*.iws
+*.swp
+*.swo
+*~
+
+# Build artifacts (we copy what we need in Dockerfile)
+**/build/
+**/target/
+**/out/
+**/.gradle/
+**/node_modules/
+**/dist/
+
+# Logs
+*.log
+logs/
+
+# OS
 .DS_Store
-.git
-.gitignore
-*.md
-docker-compose.yml
-Dockerfile
+Thumbs.db
 
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
 
+# CI/CD
+.github/
+
+# Kubernetes
+k8s/
+
+# Scripts
+*.sh
+start.sh
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test files
+**/test/
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
