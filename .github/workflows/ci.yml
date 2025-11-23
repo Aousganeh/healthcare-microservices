@@ -162,7 +162,7 @@ jobs:
 
       - name: Publish test results
         if: always() && steps.should-build.outputs.should_build == 'true'
-        uses: EnricoMi/publish-unit-test-result-action@v3
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: ${{ matrix.service }}/build/test-results/**/*.xml
           check_name: Test Results (${{ matrix.service }})
