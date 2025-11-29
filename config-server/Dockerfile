@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-FROM eclipse-temurin:21-jdk-alpine3.19 AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 LABEL org.opencontainers.image.title="Healthcare Config Server" \
       org.opencontainers.image.description="Configuration server - 2025 Optimized"

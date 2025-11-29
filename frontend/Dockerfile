@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 # Build stage
-FROM node:20-alpine3.19 AS build
+FROM node:20-alpine AS build
 
 LABEL org.opencontainers.image.title="Healthcare Frontend" \
       org.opencontainers.image.description="React frontend application - 2025 Optimized"
