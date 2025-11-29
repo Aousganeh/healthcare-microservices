@@ -3,17 +3,25 @@
 set -e
 
 export GITHUB_REPO=aousganeh/healthcare-microservices
+export REGISTRY=${REGISTRY:-ghcr.io}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-# Use local docker-compose.yml for local development
-COMPOSE_FILE="docker-compose.yml"
-
-if [ -z "$IMAGE_TAG" ]; then
-  echo "⚠️  IMAGE_TAG not set, using local builds. For production, use docker-compose.prod.yml"
-  echo "   Example: docker-compose -f docker-compose.prod.yml up -d"
+# Default to using pre-built images from GitHub Container Registry
+# Set BUILD_LOCAL=true to build images locally instead
+if [ "$BUILD_LOCAL" = "true" ]; then
+  echo "🔨 BUILD_LOCAL=true - Building images locally..."
+  COMPOSE_FILE="docker-compose.yml"
 else
-  echo "✅ Using image tag: $IMAGE_TAG"
+  echo "📦 Using pre-built images from GitHub Container Registry"
+  echo "   Images are built automatically by CI/CD on push to main"
   COMPOSE_FILE="docker-compose.prod.yml"
+  if [ -n "$IMAGE_TAG" ]; then
+    echo "✅ Using image tag: $IMAGE_TAG"
+    export IMAGE_TAG
+  else
+    echo "ℹ️  Using 'latest' tag. Set IMAGE_TAG=<tag> to use a specific version"
+    export IMAGE_TAG=latest
+  fi
 fi
 
 echo "🛑 Stopping and removing existing containers..."
@@ -29,10 +37,19 @@ if [ "$COMPOSE_FILE" = "docker-compose.prod.yml" ]; then
   echo "🧹 Cleaning up unused images..."
   docker image prune -f > /dev/null 2>&1 || true
 
-  echo "📥 Pulling latest images..."
-  docker-compose -f "$COMPOSE_FILE" pull || echo "⚠️  Some images may not exist yet, will build locally"
+  echo "📥 Pulling images from $REGISTRY..."
+  if ! docker-compose -f "$COMPOSE_FILE" pull; then
+    echo "❌ Failed to pull images. Possible reasons:"
+    echo "   1. Images not yet built by CI/CD (check GitHub Actions)"
+    echo "   2. Not logged in to $REGISTRY"
+    echo "   3. Images don't exist for tag: $IMAGE_TAG"
+    echo ""
+    echo "💡 To build locally instead, run: BUILD_LOCAL=true ./start.sh"
+    exit 1
+  fi
+  echo "✅ Images pulled successfully"
 else
-  echo "🔨 Building images locally..."
+  echo "🔨 Building images locally (this may take several minutes)..."
   docker-compose -f "$COMPOSE_FILE" build --parallel
 fi
 
