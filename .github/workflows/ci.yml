@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
+  schedule:
+    # Rebuild images daily at 2 AM UTC to ensure fresh images
+    - cron: '0 2 * * *'
 
 env:
   DOCKER_BUILDKIT: 1
@@ -261,42 +264,12 @@ jobs:
           - notification-service
     
     steps:
-      - name: Check if service should be built
-        id: should-build
-        run: |
-          SERVICE="${{ matrix.service }}"
-          ROOT_CHANGED="${{ needs.detect-changes.outputs.root }}"
-          
-          case "$SERVICE" in
-            api-gateway) SERVICE_CHANGED="${{ needs.detect-changes.outputs.api-gateway }}" ;;
-            service-discovery) SERVICE_CHANGED="${{ needs.detect-changes.outputs.service-discovery }}" ;;
-            config-server) SERVICE_CHANGED="${{ needs.detect-changes.outputs.config-server }}" ;;
-            identity-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.identity-service }}" ;;
-            patient-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.patient-service }}" ;;
-            doctor-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.doctor-service }}" ;;
-            appointment-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.appointment-service }}" ;;
-            billing-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.billing-service }}" ;;
-            room-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.room-service }}" ;;
-            equipment-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.equipment-service }}" ;;
-            notification-service) SERVICE_CHANGED="${{ needs.detect-changes.outputs.notification-service }}" ;;
-          esac
-          
-          if [[ "$SERVICE_CHANGED" == "true" ]] || [[ "$ROOT_CHANGED" == "true" ]]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "✅ ${{ matrix.service }} will be built"
-          else
-            echo "should_build=false" >> $GITHUB_OUTPUT
-            echo "⏭️  ${{ matrix.service }} has no changes, skipping"
-          fi
-
       - name: Checkout code
-        if: steps.should-build.outputs.should_build == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Set up Docker Buildx
-        if: steps.should-build.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
@@ -304,7 +277,7 @@ jobs:
             network=host
 
       - name: Log in to Container Registry
-        if: steps.should-build.outputs.should_build == 'true' && github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -312,7 +285,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
-        if: steps.should-build.outputs.should_build == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -325,7 +297,6 @@ jobs:
             type=raw,value=${{ github.run_number }}
 
       - name: Build and push Docker image
-        if: steps.should-build.outputs.should_build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -346,7 +317,8 @@ jobs:
   build-frontend:
     needs: detect-changes
     runs-on: ubuntu-latest
-    if: needs.detect-changes.outputs.frontend == 'true'
+    # Always build frontend to ensure images are available
+    if: always()
     
     steps:
       - name: Checkout code
