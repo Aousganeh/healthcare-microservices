@@ -19,7 +19,6 @@ spring:
       pool-name: PatientHikariCP
       register-mbeans: true
       connection-test-query: SELECT 1
-      register-mbeans: true
   jpa:
     hibernate:
       ddl-auto: validate
