@@ -284,11 +284,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set image name
+        id: image-name
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=${{ env.REGISTRY }}/$REPO_LOWER/${{ matrix.service }}" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}
+          images: ${{ steps.image-name.outputs.image }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -306,7 +312,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=gha,scope=${{ matrix.service }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:latest
+            type=registry,ref=${{ steps.image-name.outputs.image }}:latest
           cache-to: |
             type=gha,mode=max,scope=${{ matrix.service }}
           platforms: linux/amd64
@@ -383,11 +389,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set image name
+        id: image-name
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=${{ env.REGISTRY }}/$REPO_LOWER/frontend" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend
+          images: ${{ steps.image-name.outputs.image }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -405,7 +417,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=gha,scope=frontend
-            type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend:latest
+            type=registry,ref=${{ steps.image-name.outputs.image }}:latest
           cache-to: |
             type=gha,mode=max,scope=frontend
           platforms: linux/amd64
