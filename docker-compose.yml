@@ -1,137 +1,7 @@
+version: '3.8'
+
 services:
-  postgres-identity:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-identity
-    environment:
-      POSTGRES_DB: healthcare_identity
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_identity_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-patient:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-patient
-    environment:
-      POSTGRES_DB: healthcare_patient
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_patient_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-doctor:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-doctor
-    environment:
-      POSTGRES_DB: healthcare_doctor
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - postgres_doctor_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-appointment:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-appointment
-    environment:
-      POSTGRES_DB: healthcare_appointment
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_appointment_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-billing:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-billing
-    environment:
-      POSTGRES_DB: healthcare_billing
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5436:5432"
-    volumes:
-      - postgres_billing_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-room:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-room
-    environment:
-      POSTGRES_DB: healthcare_room
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5437:5432"
-    volumes:
-      - postgres_room_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  postgres-equipment:
-    image: postgres:15-alpine
-    container_name: healthcare-postgres-equipment
-    environment:
-      POSTGRES_DB: healthcare_equipment
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5438:5432"
-    volumes:
-      - postgres_equipment_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+  # Service Discovery
   service-discovery:
     build:
       context: .
@@ -144,26 +14,21 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
-  config-server:
-    build:
-      context: .
-      dockerfile: config-server/Dockerfile
-    container_name: healthcare-config-server
-    ports:
-      - "8888:8888"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      - service-discovery
-    networks:
-      - healthcare-network
-
+  # API Gateway
   api-gateway:
     build:
       context: .
@@ -175,49 +40,26 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
-      - service-discovery
-    networks:
-      - healthcare-network
-
-  redis:
-    image: redis:7-alpine
-    container_name: healthcare-redis
-    ports:
-      - "6379:6379"
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  identity-service:
-    build:
-      context: .
-      dockerfile: identity-service/Dockerfile
-    container_name: healthcare-identity-service
-    ports:
-      - "8001:8001"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identity:5432/healthcare_identity
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres-identity:
-        condition: service_healthy
       service-discovery:
         condition: service_healthy
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
 
+  # Patient Service
   patient-service:
     build:
       context: .
@@ -238,196 +80,107 @@ services:
         condition: service_healthy
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8002/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
 
-  doctor-service:
-    build:
-      context: .
-      dockerfile: doctor-service/Dockerfile
-    container_name: healthcare-doctor-service
-    ports:
-      - "8003:8003"
+  # PostgreSQL - Patient
+  postgres-patient:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-patient
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-doctor:5432/healthcare_doctor
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      postgres-doctor:
-        condition: service_healthy
-      service-discovery:
-        condition: service_healthy
-    networks:
-      - healthcare-network
-
-  appointment-service:
-    build:
-      context: .
-      dockerfile: appointment-service/Dockerfile
-    container_name: healthcare-appointment-service
+      POSTGRES_DB: healthcare_patient
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "8004:8004"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointment:5432/healthcare_appointment
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      postgres-appointment:
-        condition: service_healthy
-      service-discovery:
-        condition: service_healthy
-    networks:
-      - healthcare-network
-
-  billing-service:
-    build:
-      context: .
-      dockerfile: billing-service/Dockerfile
-    container_name: healthcare-billing-service
-    ports:
-      - "8005:8005"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-billing:5432/healthcare_billing
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      postgres-billing:
-        condition: service_healthy
-      service-discovery:
-        condition: service_healthy
-    networks:
-      - healthcare-network
-
-  room-service:
-    build:
-      context: .
-      dockerfile: room-service/Dockerfile
-    container_name: healthcare-room-service
-    ports:
-      - "8006:8006"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-room:5432/healthcare_room
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      postgres-room:
-        condition: service_healthy
-      service-discovery:
-        condition: service_healthy
-    networks:
-      - healthcare-network
-
-  equipment-service:
-    build:
-      context: .
-      dockerfile: equipment-service/Dockerfile
-    container_name: healthcare-equipment-service
-    ports:
-      - "8007:8007"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-equipment:5432/healthcare_equipment
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      postgres-equipment:
-        condition: service_healthy
-      service-discovery:
-        condition: service_healthy
-    networks:
-      - healthcare-network
-
-  notification-service:
-    build:
-      context: .
-      dockerfile: notification-service/Dockerfile
-    container_name: healthcare-notification-service
-    ports:
-      - "8008:8008"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
-    depends_on:
-      - service-discovery
-    networks:
-      - healthcare-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: healthcare-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - api-gateway
-    networks:
-      - healthcare-network
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: healthcare-prometheus
-    ports:
-      - "9090:9090"
+      - "5432:5432"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+      - postgres_patient_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    depends_on:
-      - service-discovery
-      - api-gateway
-      - patient-service
-      - doctor-service
-      - appointment-service
-      - billing-service
-      - room-service
-      - equipment-service
-      - identity-service
-      - notification-service
-    networks:
-      - healthcare-network
+      - "postgres"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: healthcare-grafana
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: healthcare-redis
     ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - prometheus
+      - "6379:6379"
+    command:
+      - "redis-server"
+      - "--save"
+      - ""
+      - "--appendonly"
+      - "no"
+      - "--maxmemory"
+      - "256mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
 volumes:
-  postgres_identity_data:
   postgres_patient_data:
-  postgres_doctor_data:
-  postgres_appointment_data:
-  postgres_billing_data:
-  postgres_room_data:
-  postgres_equipment_data:
-  prometheus_data:
-  grafana_data:
+    driver: local
 
 networks:
   healthcare-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 

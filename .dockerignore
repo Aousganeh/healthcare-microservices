@@ -1,10 +1,14 @@
+# Git
 .git
 .gitignore
 .github
 
+# Documentation
 *.md
 docs/
+README*
 
+# IDE
 .idea
 .vscode
 *.iml
@@ -12,6 +16,7 @@ docs/
 *.swo
 *~
 
+# Build artifacts
 **/build/
 !**/build/libs/*.jar
 **/target/
@@ -20,35 +25,46 @@ docs/
 **/node_modules/
 **/dist/
 
+# Logs
 *.log
 logs/
 
+# OS
 .DS_Store
 Thumbs.db
 
+# Docker
 docker-compose*.yml
 Dockerfile*
 .dockerignore
 
-.github/
-
-k8s/
-
+# Scripts
 *.sh
 start.sh
 
+# Environment
 .env
 .env.local
 .env.*.local
 
+# Tests
 **/test/
 **/__tests__/
 **/*.test.*
 **/*.spec.*
 
+# Coverage
 coverage/
 .nyc_output/
 
+# Temporary
 tmp/
 temp/
 *.tmp
+
+# Kubernetes
+k8s/
+*.yaml
+*.yml
+!**/src/**/*.yml
+!**/src/**/*.yaml

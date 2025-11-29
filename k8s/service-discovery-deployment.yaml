@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-discovery
+  namespace: healthcare
+  labels:
+    app: service-discovery
+    version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: service-discovery
+  template:
+    metadata:
+      labels:
+        app: service-discovery
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8761"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      containers:
+      - name: service-discovery
+        image: ghcr.io/aousganeh/healthcare-microservices/service-discovery:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8761
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        - name: JAVA_TOOL_OPTIONS
+          value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8761
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8761
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-discovery
+  namespace: healthcare
+  labels:
+    app: service-discovery
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8761
+    targetPort: 8761
+    protocol: TCP
+    name: http
+  selector:
+    app: service-discovery
+

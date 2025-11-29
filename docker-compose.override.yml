@@ -1,4 +1,0 @@
-
-x-build-args: &build-args
-  BUILDKIT_INLINE_CACHE: 1
-

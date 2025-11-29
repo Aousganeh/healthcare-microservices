@@ -92,10 +92,21 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,prometheus
+        include: health,info,gateway,prometheus,metrics,httptrace
   metrics:
     export:
       prometheus:
         enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+  tracing:
+    sampling:
+      probability: 1.0
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
 
 
