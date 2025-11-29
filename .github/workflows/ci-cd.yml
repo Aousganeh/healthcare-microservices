@@ -106,7 +106,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/healthcare-microservices/${{ matrix.service }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -176,7 +176,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/frontend
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/healthcare-microservices/frontend
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
