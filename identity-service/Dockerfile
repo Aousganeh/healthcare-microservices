@@ -19,8 +19,9 @@ COPY identity-service/src identity-service/src
 ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
 RUN --mount=type=cache,target=/root/.gradle/caches \
     --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :identity-service:build -x test --no-daemon --build-cache --parallel && \
-    find identity-service/build/libs -name "*.jar" -not -name "*-plain.jar" -exec cp {} app.jar \;
+    ./gradlew :identity-service:build -x test --no-daemon --build-cache --parallel
+RUN find identity-service/build/libs -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
+    (echo "Error: JAR file not found in identity-service/build/libs" && ls -la identity-service/build/libs/ && exit 1)
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 WORKDIR /app

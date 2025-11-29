@@ -19,8 +19,9 @@ COPY billing-service/src billing-service/src
 ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
 RUN --mount=type=cache,target=/root/.gradle/caches \
     --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :billing-service:build -x test --no-daemon --build-cache --parallel && \
-    find billing-service/build/libs -name "*.jar" -not -name "*-plain.jar" -exec cp {} app.jar \;
+    ./gradlew :billing-service:build -x test --no-daemon --build-cache --parallel
+RUN find billing-service/build/libs -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
+    (echo "Error: JAR file not found in billing-service/build/libs" && ls -la billing-service/build/libs/ && exit 1)
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 WORKDIR /app

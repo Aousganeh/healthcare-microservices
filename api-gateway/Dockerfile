@@ -19,8 +19,9 @@ COPY api-gateway/src api-gateway/src
 ENV GRADLE_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m -Dorg.gradle.caching=true -Dorg.gradle.parallel=true -Dorg.gradle.configureondemand=true"
 RUN --mount=type=cache,target=/root/.gradle/caches \
     --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :api-gateway:build -x test --no-daemon --build-cache --parallel && \
-    find api-gateway/build/libs -name "*.jar" -not -name "*-plain.jar" -exec cp {} app.jar \;
+    ./gradlew :api-gateway:build -x test --no-daemon --build-cache --parallel
+RUN find api-gateway/build/libs -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
+    (echo "Error: JAR file not found in api-gateway/build/libs" && ls -la api-gateway/build/libs/ && exit 1)
 
 FROM gcr.io/distroless/java21-debian12:nonroot
 WORKDIR /app
