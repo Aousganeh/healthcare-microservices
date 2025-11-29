@@ -38,17 +38,24 @@ if [ "$COMPOSE_FILE" = "docker-compose.prod.yml" ]; then
   docker image prune -f > /dev/null 2>&1 || true
 
   echo "📥 Pulling images from $REGISTRY..."
-  if ! docker-compose -f "$COMPOSE_FILE" pull; then
-    echo "❌ Failed to pull images. Possible reasons:"
-    echo "   1. Images not yet built by CI/CD (check GitHub Actions)"
-    echo "   2. Not logged in to $REGISTRY"
-    echo "   3. Images don't exist for tag: $IMAGE_TAG"
-    echo ""
-    echo "💡 To build locally instead, run: BUILD_LOCAL=true ./start.sh"
-    exit 1
+  if ! docker-compose -f "$COMPOSE_FILE" pull 2>/dev/null; then
+    echo "⚠️  Failed to pull images or images don't exist yet"
+    echo "🔄 Falling back to local builds..."
+    COMPOSE_FILE="docker-compose.yml"
+  else
+    echo "✅ Images pulled successfully"
+    # Test if service-discovery image works
+    if docker run --rm ghcr.io/aousganeh/healthcare-microservices/service-discovery:${IMAGE_TAG:-latest} ls /app/app.jar > /dev/null 2>&1; then
+      echo "✅ Pulled images are valid"
+    else
+      echo "⚠️  Pulled images appear to be outdated (missing JAR files)"
+      echo "🔄 Falling back to local builds with fixed Dockerfiles..."
+      COMPOSE_FILE="docker-compose.yml"
+    fi
   fi
-  echo "✅ Images pulled successfully"
-else
+fi
+
+if [ "$COMPOSE_FILE" = "docker-compose.yml" ]; then
   echo "🔨 Building images locally (this may take several minutes)..."
   docker-compose -f "$COMPOSE_FILE" build --parallel
 fi
