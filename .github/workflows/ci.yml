@@ -210,15 +210,25 @@ jobs:
           if-no-files-found: ignore
           compression-level: 6
 
-      - name: Publish test results
+      - name: Check if test results exist
         if: always() && steps.should-build.outputs.should_build == 'true'
+        id: check-tests
+        run: |
+          if [ -d "${{ matrix.service }}/build/test-results" ] && [ -n "$(find ${{ matrix.service }}/build/test-results -name '*.xml' 2>/dev/null)" ]; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish test results
+        if: always() && steps.should-build.outputs.should_build == 'true' && steps.check-tests.outputs.has_tests == 'true'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: ${{ matrix.service }}/build/test-results/**/*.xml
           check_name: Test Results (${{ matrix.service }})
           comment_mode: off
           report_individual_runs: false
-          check_run_annotations: all
+          check_run_annotations: all tests
 
       - name: Upload build artifacts
         if: steps.should-build.outputs.should_build == 'true'
