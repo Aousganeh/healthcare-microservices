@@ -144,7 +144,7 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -158,7 +158,7 @@ services:
       - "8888:8888"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       - service-discovery
     networks:
@@ -173,7 +173,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       - service-discovery
     networks:
@@ -202,10 +202,12 @@ services:
       - "8001:8001"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identity:5432/healthcare_identity
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     depends_on:
       redis:
         condition: service_healthy
@@ -225,10 +227,10 @@ services:
       - "8002:8002"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patient:5432/healthcare_patient
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-patient:
         condition: service_healthy
@@ -246,10 +248,10 @@ services:
       - "8003:8003"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-doctor:5432/healthcare_doctor
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-doctor:
         condition: service_healthy
@@ -267,10 +269,10 @@ services:
       - "8004:8004"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointment:5432/healthcare_appointment
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-appointment:
         condition: service_healthy
@@ -288,10 +290,10 @@ services:
       - "8005:8005"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-billing:5432/healthcare_billing
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-billing:
         condition: service_healthy
@@ -309,10 +311,10 @@ services:
       - "8006:8006"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-room:5432/healthcare_room
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-room:
         condition: service_healthy
@@ -330,10 +332,10 @@ services:
       - "8007:8007"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-equipment:5432/healthcare_equipment
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-equipment:
         condition: service_healthy
@@ -351,7 +353,7 @@ services:
       - "8008:8008"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       - service-discovery
     networks:
