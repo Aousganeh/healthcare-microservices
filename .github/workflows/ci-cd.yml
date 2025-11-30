@@ -110,6 +110,9 @@ jobs:
       packages: write
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
         with:
@@ -158,6 +161,9 @@ jobs:
       packages: write
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
       - name: Setup Docker
         uses: ./.github/actions/setup-docker
         with:

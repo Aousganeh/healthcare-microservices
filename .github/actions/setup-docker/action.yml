@@ -1,5 +1,5 @@
 name: 'Setup Docker'
-description: 'Common Docker setup steps: checkout, buildx, and registry login'
+description: 'Common Docker setup steps: buildx and registry login'
 
 inputs:
   registry:
@@ -14,9 +14,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
