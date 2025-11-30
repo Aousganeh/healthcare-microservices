@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.6
 # Minimal stage to find and prepare the JAR
-FROM alpine:latest AS jar-selector
+FROM busybox:latest AS jar-selector
 
-ARG JAR_PATH=jars/
+ARG JAR_PATH=jars
 
 WORKDIR /jars
 
 # Copy all JARs
-COPY ${JAR_PATH}*.jar ./
+COPY ${JAR_PATH}/*.jar ./
 
 # Find the non-plain JAR and rename it
 RUN find . -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
@@ -24,20 +24,20 @@ WORKDIR /app
 # Copy pre-built JAR from selector stage
 COPY --from=jar-selector --chown=nonroot:nonroot /jars/app.jar app.jar
 
-ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
+ENV JAVA_TOOL_OPTIONS=" \
+    -Xshare:auto \
     -XX:MaxRAMPercentage=75.0 \
     -XX:InitialRAMPercentage=50.0 \
     -XX:+UseG1GC \
     -XX:MaxGCPauseMillis=200 \
     -XX:+UseStringDeduplication \
     -XX:+ExitOnOutOfMemoryError \
-    -Djava.security.egd=file:/dev/./urandom \
     -Dspring.backgroundpreinitializer.ignore=true"
 
 EXPOSE 8002
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD ["/busybox/sh", "-c", "wget --no-verbose --tries=1 --spider http://localhost:8002/actuator/health || exit 1"]
+    CMD ["curl", "-f", "http://localhost:8002/actuator/health"]
 
 USER nonroot:nonroot
 

@@ -146,7 +146,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-            JAR_PATH=jars/
+            JAR_PATH=jars
 
   # Build Frontend
   build-frontend:

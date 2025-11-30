@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.6
 # Minimal stage to find and prepare the JAR
-FROM alpine:latest AS jar-selector
+FROM busybox:latest AS jar-selector
 
-ARG JAR_PATH=jars/
+ARG JAR_PATH=jars
 
 WORKDIR /jars
 
 # Copy all JARs
-COPY ${JAR_PATH}*.jar ./
+COPY ${JAR_PATH}/*.jar ./
 
 # Find the non-plain JAR and rename it
 RUN find . -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
@@ -27,7 +27,8 @@ WORKDIR /app
 COPY --from=jar-selector --chown=nonroot:nonroot /jars/app.jar app.jar
 
 # JVM optimizations for containers (2025 best practices)
-ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
+ENV JAVA_TOOL_OPTIONS=" \
+    -Xshare:auto \
     -XX:MaxRAMPercentage=75.0 \
     -XX:InitialRAMPercentage=50.0 \
     -XX:+UseG1GC \
@@ -37,14 +38,13 @@ ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
     -XX:+ExitOnOutOfMemoryError \
     -XX:+HeapDumpOnOutOfMemoryError \
     -XX:HeapDumpPath=/tmp/heapdump.hprof \
-    -Djava.security.egd=file:/dev/./urandom \
     -Dspring.backgroundpreinitializer.ignore=true \
     -Djava.awt.headless=true"
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD ["/busybox/sh", "-c", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+    CMD ["curl", "-f", "http://localhost:8080/actuator/health"]
 
 USER nonroot:nonroot
 
