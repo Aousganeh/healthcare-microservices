@@ -269,6 +269,7 @@ if [ "$START_CONTAINERS" = "start" ]; then
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "🌐 Access services:"
+    echo "   - Frontend: http://localhost:3000"
     echo "   - API Gateway: http://localhost:8080"
     echo "   - Eureka UI: http://localhost:8761"
     echo "   - PostgreSQL: localhost:5432"
