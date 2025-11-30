@@ -182,8 +182,146 @@ services:
           memory: 128M
           cpus: '0.1'
 
+  # PostgreSQL - Doctor
+  postgres-doctor:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-doctor
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_doctor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_doctor_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - doctor-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Appointment
+  postgres-appointment:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-appointment
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_appointment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_appointment_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - appointment-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Billing
+  postgres-billing:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-billing
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_billing
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - billing-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Room
+  postgres-room:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-room
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_room
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_room_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - room-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Equipment
+  postgres-equipment:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-equipment
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_equipment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_equipment_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - equipment-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Identity
+  postgres-identity:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres-identity
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: healthcare_identity
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_identity_data:/var/lib/postgresql/data
+    networks:
+      healthcare-network:
+        aliases:
+          - identity-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_patient_data:
+    driver: local
+  postgres_doctor_data:
+    driver: local
+  postgres_appointment_data:
+    driver: local
+  postgres_billing_data:
+    driver: local
+  postgres_room_data:
+    driver: local
+  postgres_equipment_data:
+    driver: local
+  postgres_identity_data:
     driver: local
 
 networks:
