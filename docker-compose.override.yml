@@ -1,0 +1,26 @@
+version: '3.8'
+
+# Override to use pre-pulled images instead of building
+services:
+  api-gateway:
+    image: api-gateway:latest
+  service-discovery:
+    image: service-discovery:latest
+  config-server:
+    image: config-server:latest
+  identity-service:
+    image: identity-service:latest
+  patient-service:
+    image: patient-service:latest
+  doctor-service:
+    image: doctor-service:latest
+  appointment-service:
+    image: appointment-service:latest
+  billing-service:
+    image: billing-service:latest
+  room-service:
+    image: room-service:latest
+  equipment-service:
+    image: equipment-service:latest
+  notification-service:
+    image: notification-service:latest
