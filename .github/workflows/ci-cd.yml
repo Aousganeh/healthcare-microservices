@@ -103,7 +103,6 @@ jobs:
           equipment-service,
           notification-service
         ]
-      max-parallel: 3
     
     permissions:
       contents: read
