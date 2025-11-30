@@ -236,7 +236,7 @@ if [ "$START_CONTAINERS" = "start" ]; then
     # Use --no-deps to bypass dependency checks and start them anyway
     # (dependencies are already running, just might not be "healthy" yet)
     echo "   Starting all microservices..."
-    docker-compose up -d --no-build --no-deps api-gateway patient-service doctor-service appointment-service billing-service room-service equipment-service identity-service notification-service config-server 2>/dev/null || docker-compose up -d --no-build
+    docker-compose up -d --no-build --no-deps api-gateway patient-service doctor-service appointment-service billing-service room-service equipment-service identity-service notification-service config-server frontend 2>/dev/null || docker-compose up -d --no-build
     
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
