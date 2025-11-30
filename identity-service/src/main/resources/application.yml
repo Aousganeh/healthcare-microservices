@@ -71,3 +71,13 @@ management:
       prometheus:
         enabled: true
 
+logging:
+  level:
+    root: INFO
+    com.healthcare.identity: DEBUG
+    org.springframework.transaction: DEBUG
+    org.springframework.dao: DEBUG
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+

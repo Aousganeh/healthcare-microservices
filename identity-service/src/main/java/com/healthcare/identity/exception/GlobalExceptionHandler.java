@@ -1,6 +1,8 @@
 package com.healthcare.identity.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -17,12 +19,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
@@ -100,9 +105,36 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiError> handleDataAccess(DataAccessException ex, HttpServletRequest req) {
+        logger.error("DataAccessException occurred: {}", ex.getMessage(), ex);
+        
         Map<String, String> fields = new HashMap<>();
-        fields.put("database", "Database operation error occurred.");
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "DATABASE_ERROR", "Database operation error occurred.", req, fields);
+        String detailedMessage = "Database operation error occurred.";
+        String rootCause = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        String exceptionClass = ex.getClass().getSimpleName();
+        
+        // Include root cause information
+        if (rootCause != null) {
+            detailedMessage = "Database error: " + rootCause;
+            fields.put("rootCause", rootCause);
+        }
+        
+        fields.put("database", detailedMessage);
+        fields.put("exceptionType", exceptionClass);
+        fields.put("exceptionMessage", ex.getMessage() != null ? ex.getMessage() : "No message");
+        
+        // Include cause information if available
+        if (ex.getCause() != null) {
+            fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
+                      (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
+        }
+        
+        // Log full stack trace for debugging
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        logger.debug("Full stack trace:\n{}", sw.toString());
+        
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "DATABASE_ERROR", detailedMessage, req, fields);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -121,6 +153,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiError> handleRuntimeException(RuntimeException ex, HttpServletRequest req) {
+        logger.error("RuntimeException occurred: {}", ex.getMessage(), ex);
+        
         Map<String, String> fields = new HashMap<>();
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         String code = "RUNTIME_ERROR";
@@ -141,14 +175,47 @@ public class GlobalExceptionHandler {
         }
 
         fields.put("error", message);
+        fields.put("exceptionType", ex.getClass().getSimpleName());
+        
+        // Include cause if available
+        if (ex.getCause() != null) {
+            fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
+                      (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
+        }
+        
+        // Log full stack trace for debugging
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        logger.debug("Full stack trace:\n{}", sw.toString());
+        
         return build(status, code, message, req, fields);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest req) {
+        logger.error("Unexpected exception occurred: {}", ex.getMessage(), ex);
+        
         Map<String, String> fields = new HashMap<>();
-        fields.put("error", "Unexpected error occurred: " + ex.getClass().getSimpleName());
+        String exceptionClass = ex.getClass().getSimpleName();
         String message = ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred.";
+        
+        fields.put("error", "Unexpected error occurred: " + exceptionClass);
+        fields.put("exceptionType", exceptionClass);
+        fields.put("exceptionMessage", message);
+        
+        // Include cause if available
+        if (ex.getCause() != null) {
+            fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
+                      (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
+        }
+        
+        // Log full stack trace for debugging
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        logger.debug("Full stack trace:\n{}", sw.toString());
+        
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", message, req, fields);
     }
 
