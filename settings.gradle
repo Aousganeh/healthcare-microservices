@@ -12,3 +12,11 @@ include 'room-service'
 include 'equipment-service'
 include 'notification-service'
 
+buildCache {
+    remote(HttpBuildCache) {
+        url = System.getenv('GRADLE_BUILD_CACHE_URL') ?: 'https://cache-url'
+        push = true
+        enabled = System.getenv('GRADLE_BUILD_CACHE_URL') != null
+    }
+}
+

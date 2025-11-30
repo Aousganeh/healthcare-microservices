@@ -1,46 +1,28 @@
 # syntax=docker/dockerfile:1.6
-FROM eclipse-temurin:21-jdk-alpine AS builder
+# Minimal stage to find and prepare the JAR
+FROM alpine:latest AS jar-selector
+
+ARG JAR_PATH=jars/
+
+WORKDIR /jars
+
+# Copy all JARs
+COPY ${JAR_PATH}*.jar ./
+
+# Find the non-plain JAR and rename it
+RUN find . -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
+    (echo "Error: JAR not found" && ls -la && exit 1)
+
+# Runtime stage
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 LABEL org.opencontainers.image.title="Healthcare Config Server" \
       org.opencontainers.image.description="Configuration server - 2025 Optimized"
 
-WORKDIR /workspace/app
-
-RUN apk add --no-cache --virtual .build-deps bash && \
-    rm -rf /var/cache/apk/*
-
-COPY build.gradle settings.gradle gradlew ./
-COPY gradle gradle
-RUN chmod +x gradlew
-
-RUN --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew --version || true
-
-COPY config-server/build.gradle config-server/
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :config-server:dependencies --no-daemon || true
-
-COPY config-server/src config-server/src
-
-ENV GRADLE_OPTS="-Xmx2048m -XX:MaxMetaspaceSize=512m -XX:+UseG1GC \
-    -Dorg.gradle.caching=true \
-    -Dorg.gradle.parallel=true \
-    -Dorg.gradle.configureondemand=true \
-    -Dorg.gradle.daemon=false \
-    -Dorg.gradle.workers.max=4"
-
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    --mount=type=cache,target=/root/.gradle/wrapper \
-    ./gradlew :config-server:build -x test --no-daemon --build-cache --parallel && \
-    find config-server/build/libs -name "*.jar" -not -name "*-plain.jar" | head -1 | xargs -I {} cp {} app.jar || \
-    (echo "Error: JAR not found" && ls -la config-server/build/libs/ && exit 1)
-
-FROM gcr.io/distroless/java21-debian12:nonroot
-
 WORKDIR /app
 
-COPY --from=builder --chown=nonroot:nonroot /workspace/app/app.jar app.jar
+# Copy pre-built JAR from selector stage
+COPY --from=jar-selector --chown=nonroot:nonroot /jars/app.jar app.jar
 
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
