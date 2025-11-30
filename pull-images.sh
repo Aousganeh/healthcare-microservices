@@ -196,14 +196,12 @@ if [ "$START_CONTAINERS" = "start" ]; then
         echo "# Override to use pre-pulled images instead of building"
         echo "services:"
         
-        # Add image overrides for all services
+        # Add image overrides for all services (including frontend)
         for service in "${SERVICES[@]}"; do
-            if [ "$service" != "frontend" ]; then
-                if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^${service}:${TAG}$"; then
-                    echo "  ${service}:"
-                    echo "    image: ${service}:${TAG}"
-                    # When image is specified, docker-compose will use it instead of building
-                fi
+            if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^${service}:${TAG}$"; then
+                echo "  ${service}:"
+                echo "    image: ${service}:${TAG}"
+                # When image is specified, docker-compose will use it instead of building
             fi
         done
     } > docker-compose.override.yml
@@ -216,7 +214,29 @@ if [ "$START_CONTAINERS" = "start" ]; then
     
     # Use docker-compose to start everything (--no-build prevents building, uses images)
     # The override file specifies images, so docker-compose will use them instead of building
-    docker-compose up -d --no-build
+    # Start databases and service-discovery first
+    echo "   Starting databases and service-discovery first..."
+    docker-compose up -d --no-build postgres-patient postgres-doctor postgres-appointment postgres-billing postgres-room postgres-equipment postgres-identity redis service-discovery
+    
+    # Wait for service-discovery to be healthy
+    echo "   Waiting for service-discovery to be healthy..."
+    timeout=60
+    elapsed=0
+    while [ $elapsed -lt $timeout ]; do
+        if docker-compose ps service-discovery | grep -q "healthy"; then
+            echo "   ✅ service-discovery is healthy"
+            break
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo "   Waiting... ($elapsed/$timeout seconds)"
+    done
+    
+    # Start all microservices
+    # Use --no-deps to bypass dependency checks and start them anyway
+    # (dependencies are already running, just might not be "healthy" yet)
+    echo "   Starting all microservices..."
+    docker-compose up -d --no-build --no-deps api-gateway patient-service doctor-service appointment-service billing-service room-service equipment-service identity-service notification-service config-server 2>/dev/null || docker-compose up -d --no-build
     
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

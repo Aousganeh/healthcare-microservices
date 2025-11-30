@@ -370,6 +370,32 @@ services:
           memory: 256M
           cpus: '0.25'
 
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: healthcare-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
   # PostgreSQL - Patient
   postgres-patient:
     image: postgres:16-alpine
