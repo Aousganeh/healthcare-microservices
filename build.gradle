@@ -43,7 +43,7 @@ subprojects {
 
     tasks.withType(Test) {
         useJUnitPlatform()
-        maxParallelForks = (Runtime.runtime.availableProcessors() / 2).coerceAtLeast(1)
+        maxParallelForks = Math.max(1, Runtime.runtime.availableProcessors().intdiv(2))
         forkEvery = 10
         testLogging {
             events "passed", "skipped", "failed"
