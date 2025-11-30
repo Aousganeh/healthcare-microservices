@@ -16,6 +16,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
 
     java {
@@ -26,12 +27,6 @@ subprojects {
         }
     }
 
-    configurations {
-        compileOnly {
-            extendsFrom annotationProcessor
-        }
-    }
-
     dependencyManagement {
         imports {
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:2024.0.0"
@@ -39,7 +34,6 @@ subprojects {
     }
 
     tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
         options.compilerArgs += [
             '-parameters',
             '-Xlint:unchecked',
@@ -49,7 +43,7 @@ subprojects {
 
     tasks.withType(Test) {
         useJUnitPlatform()
-        maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+        maxParallelForks = (Runtime.runtime.availableProcessors() / 2).coerceAtLeast(1)
         forkEvery = 10
         testLogging {
             events "passed", "skipped", "failed"
@@ -58,12 +52,17 @@ subprojects {
     }
 
     tasks.withType(org.springframework.boot.gradle.tasks.bundling.BootJar) {
-        archiveFileName = "${project.name}-${project.version}.jar"
+        archiveBaseName = project.name
         layered {
             enabled = true
         }
     }
 
-    apply plugin: 'org.springframework.boot'
+    dependencies {
+        // Common dependencies for all microservices
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
 }
 

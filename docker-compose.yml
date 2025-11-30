@@ -7,6 +7,8 @@ services:
       context: .
       dockerfile: service-discovery/Dockerfile
     container_name: healthcare-service-discovery
+    restart: unless-stopped
+    # Eureka UI port (optional - remove if not needed for debugging)
     ports:
       - "8761:8761"
     environment:
@@ -34,11 +36,12 @@ services:
       context: .
       dockerfile: api-gateway/Dockerfile
     container_name: healthcare-api-gateway
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       service-discovery:
         condition: service_healthy
@@ -65,14 +68,14 @@ services:
       context: .
       dockerfile: patient-service/Dockerfile
     container_name: healthcare-patient-service
-    ports:
-      - "8002:8002"
+    restart: unless-stopped
+    # No ports exposed - only accessible internally via API Gateway
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patient:5432/healthcare_patient
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://service-discovery:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres-patient:
         condition: service_healthy
@@ -99,6 +102,7 @@ services:
   postgres-patient:
     image: postgres:16-alpine
     container_name: healthcare-postgres-patient
+    restart: unless-stopped
     environment:
       POSTGRES_DB: healthcare_patient
       POSTGRES_USER: postgres
@@ -108,7 +112,9 @@ services:
     volumes:
       - postgres_patient_data:/var/lib/postgresql/data
     networks:
-      - healthcare-network
+      healthcare-network:
+        aliases:
+          - patient-db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -145,6 +151,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: healthcare-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     command:
@@ -158,7 +165,9 @@ services:
       - "--maxmemory-policy"
       - "allkeys-lru"
     networks:
-      - healthcare-network
+      healthcare-network:
+        aliases:
+          - redis-cache
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
