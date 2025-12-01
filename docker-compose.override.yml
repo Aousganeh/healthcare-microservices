@@ -1,5 +1,6 @@
 version: '3.8'
 
+# Override to use pre-pulled images instead of building
 services:
   api-gateway:
     image: api-gateway:latest
@@ -23,3 +24,5 @@ services:
     image: equipment-service:latest
   notification-service:
     image: notification-service:latest
+  frontend:
+    image: frontend:latest

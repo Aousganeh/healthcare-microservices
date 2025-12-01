@@ -37,7 +37,7 @@ public class DoctorService {
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
-
+    
     @Transactional(readOnly = true)
     public Page<DoctorDTO> getDoctorsPaged(int page, int size, String sortBy, String direction) {
         Sort sort = "desc".equalsIgnoreCase(direction)
