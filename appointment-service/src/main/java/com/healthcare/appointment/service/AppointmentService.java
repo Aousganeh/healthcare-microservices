@@ -6,6 +6,7 @@ import com.healthcare.appointment.dto.RescheduleRequest;
 import com.healthcare.appointment.dto.TimeSlotDTO;
 import com.healthcare.appointment.entity.Appointment;
 import com.healthcare.appointment.enums.AppointmentStatus;
+import com.healthcare.appointment.event.AppointmentEventPublisher;
 import com.healthcare.appointment.feign.DoctorServiceClient;
 import com.healthcare.appointment.feign.PatientServiceClient;
 import com.healthcare.appointment.repository.AppointmentRepository;
@@ -36,6 +37,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PatientServiceClient patientServiceClient;
     private final DoctorServiceClient doctorServiceClient;
+    private final AppointmentEventPublisher eventPublisher;
     
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getAllAppointments() {
@@ -69,6 +71,7 @@ public class AppointmentService {
             appointment.setDurationMinutes(30);
         }
         appointment = appointmentRepository.save(appointment);
+        eventPublisher.publishCreated(appointment);
         return toDTO(appointment);
     }
     
@@ -263,6 +266,7 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         
         appointment = appointmentRepository.save(appointment);
+        eventPublisher.publishRescheduled(appointment);
         return toDTO(appointment);
     }
     
@@ -276,6 +280,7 @@ public class AppointmentService {
         
         appointment.setStatus(AppointmentStatus.SCHEDULED);
         appointment = appointmentRepository.save(appointment);
+        eventPublisher.publishApproved(appointment);
         return toDTO(appointment);
     }
     
@@ -292,6 +297,7 @@ public class AppointmentService {
             appointment.setNotes((appointment.getNotes() != null ? appointment.getNotes() + "\n" : "") + "Rejection reason: " + reason);
         }
         appointment = appointmentRepository.save(appointment);
+        eventPublisher.publishRejected(appointment);
         return toDTO(appointment);
     }
     

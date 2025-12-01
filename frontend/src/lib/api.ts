@@ -268,3 +268,27 @@ export function deleteDepartment(id: number) {
   });
 }
 
+export interface Notification {
+  id: number;
+  patientId?: number;
+  doctorId?: number;
+  type: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export function getPatientNotifications(patientId: number) {
+  return request<Notification[]>(`${API_BASE}/notifications/patient/${patientId}`);
+}
+
+export function getDoctorNotifications(doctorId: number) {
+  return request<Notification[]>(`${API_BASE}/notifications/doctor/${doctorId}`);
+}
+
+export function markNotificationRead(id: number) {
+  return request<void>(`${API_BASE}/notifications/${id}/read`, {
+    method: "PATCH",
+  });
+}
+

@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Menu, X, Activity, LogOut, User, Shield } from "lucide-react";
+import { Moon, Sun, Menu, X, Activity, LogOut, Bell } from "lucide-react";
 import { NavLink } from "@/components/navigation/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDoctors, getPatientByEmail } from "@/lib/api";
+import { getDoctors, getDoctorNotifications, getPatientByEmail, getPatientNotifications } from "@/lib/api";
 import type { Doctor } from "@/types/api";
 
 export const Navbar = () => {
@@ -35,6 +35,25 @@ export const Navbar = () => {
     if (!isDoctor || !user?.email) return null;
     return doctors.find((d: Doctor) => d.email === user.email);
   }, [doctors, user?.email, isDoctor]);
+
+  const patientId = !isDoctor ? patient?.id : undefined;
+  const doctorId = isDoctor ? doctor?.id : undefined;
+
+  const {
+    data: notifications = [],
+  } = useQuery({
+    queryKey: ["notifications", { patientId, doctorId }],
+    queryFn: () =>
+      isDoctor && doctorId
+        ? getDoctorNotifications(doctorId)
+        : patientId
+        ? getPatientNotifications(patientId)
+        : Promise.resolve([]),
+    enabled: isAuthenticated && (!!patientId || !!doctorId),
+    refetchInterval: 30000,
+  });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -145,6 +164,16 @@ export const Navbar = () => {
 
             {isAuthenticated ? (
               <>
+                <div className="relative hidden md:block">
+                  <Button variant="ghost" size="icon" aria-label="Notifications">
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
