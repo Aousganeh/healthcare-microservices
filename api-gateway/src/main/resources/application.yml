@@ -13,12 +13,22 @@ spring:
             - Path=/api/auth/**
           filters:
             - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
         - id: patient-service
           uri: lb://patient-service
           predicates:
             - Path=/api/patients/**,/api/medical-records/**,/api/medical-conditions/**,/api/insurances/**,/api/health-metrics/**,/api/prescriptions/**
           filters:
             - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@ipKeyResolver}"
         - id: doctor-service
           uri: lb://doctor-service
           predicates:
@@ -31,6 +41,11 @@ spring:
             - Path=/api/appointments/**
           filters:
             - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@ipKeyResolver}"
         - id: billing-service
           uri: lb://billing-service
           predicates:

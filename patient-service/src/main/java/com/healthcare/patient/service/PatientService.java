@@ -4,30 +4,50 @@ import com.healthcare.patient.dto.PatientDTO;
 import com.healthcare.patient.entity.Patient;
 import com.healthcare.patient.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@CacheConfig(cacheNames = "patients")
 public class PatientService {
     private final PatientRepository patientRepository;
     
+    @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients() {
         return patientRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public Page<PatientDTO> getPatientsPaged(int page, int size, String sortBy, String direction) {
+        Sort sort = "desc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return patientRepository.findAll(pageable).map(this::toDTO);
+    }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "#id")
     public PatientDTO getPatientById(Integer id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
         return toDTO(patient);
     }
     
+    @CacheEvict(allEntries = true)
     public PatientDTO createPatient(PatientDTO patientDTO) {
         if (patientDTO.getEmail() != null && patientRepository.findByEmail(patientDTO.getEmail()).isPresent()) {
             throw new RuntimeException("Patient with email already exists: " + patientDTO.getEmail());
@@ -38,6 +58,7 @@ public class PatientService {
         return toDTO(patient);
     }
     
+    @CacheEvict(allEntries = true)
     public PatientDTO updatePatient(Integer id, PatientDTO patientDTO) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
@@ -58,6 +79,7 @@ public class PatientService {
         return toDTO(patient);
     }
     
+    @CacheEvict(allEntries = true)
     public void deletePatient(Integer id) {
         if (!patientRepository.existsById(id)) {
             throw new RuntimeException("Patient not found with id: " + id);
@@ -65,6 +87,8 @@ public class PatientService {
         patientRepository.deleteById(id);
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'search:' + #searchTerm")
     public List<PatientDTO> searchPatients(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return getAllPatients();
@@ -75,6 +99,8 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'room:' + #roomId")
     public List<PatientDTO> getPatientsByRoomId(Integer roomId) {
         return patientRepository.findByRoomId(roomId)
                 .stream()
@@ -82,12 +108,16 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'email:' + #email")
     public PatientDTO getPatientByEmail(String email) {
         Patient patient = patientRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Patient not found with email: " + email));
         return toDTO(patient);
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'serial:' + #serialNumber")
     public PatientDTO getPatientBySerialNumber(String serialNumber) {
         Patient patient = patientRepository.findBySerialNumber(serialNumber)
                 .orElseThrow(() -> new RuntimeException("Patient not found with serial number: " + serialNumber));

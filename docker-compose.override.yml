@@ -1,6 +1,5 @@
 version: '3.8'
 
-# Override to use pre-pulled images instead of building
 services:
   api-gateway:
     image: api-gateway:latest

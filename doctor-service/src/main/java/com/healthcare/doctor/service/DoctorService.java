@@ -1,13 +1,20 @@
 package com.healthcare.doctor.service;
 
 import com.healthcare.doctor.dto.DoctorDTO;
+import com.healthcare.doctor.entity.Department;
 import com.healthcare.doctor.entity.Doctor;
 import com.healthcare.doctor.entity.Specialization;
-import com.healthcare.doctor.entity.Department;
+import com.healthcare.doctor.repository.DepartmentRepository;
 import com.healthcare.doctor.repository.DoctorRepository;
 import com.healthcare.doctor.repository.SpecializationRepository;
-import com.healthcare.doctor.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,29 +24,46 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@CacheConfig(cacheNames = "doctors")
 public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final SpecializationRepository specializationRepository;
     private final DepartmentRepository departmentRepository;
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'all'")
     public List<DoctorDTO> getAllDoctors() {
         return doctorRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public Page<DoctorDTO> getDoctorsPaged(int page, int size, String sortBy, String direction) {
+        Sort sort = "desc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return doctorRepository.findAll(pageable).map(this::toDTO);
+    }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "#id")
     public DoctorDTO getDoctorById(Integer id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
         return toDTO(doctor);
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'email:' + #email")
     public DoctorDTO getDoctorByEmail(String email) {
         Doctor doctor = doctorRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
         return toDTO(doctor);
     }
     
+    @CacheEvict(allEntries = true)
     public DoctorDTO createDoctor(DoctorDTO doctorDTO) {
         if (doctorDTO.getEmail() != null && doctorRepository.findByEmail(doctorDTO.getEmail()).isPresent()) {
             throw new RuntimeException("Doctor with email already exists: " + doctorDTO.getEmail());
@@ -73,6 +97,7 @@ public class DoctorService {
         return toDTO(doctor);
     }
     
+    @CacheEvict(allEntries = true)
     public DoctorDTO updateDoctor(Integer id, DoctorDTO doctorDTO) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
@@ -108,6 +133,7 @@ public class DoctorService {
         return toDTO(doctor);
     }
     
+    @CacheEvict(allEntries = true)
     public void deleteDoctor(Integer id) {
         if (!doctorRepository.existsById(id)) {
             throw new RuntimeException("Doctor not found with id: " + id);
@@ -115,6 +141,8 @@ public class DoctorService {
         doctorRepository.deleteById(id);
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'search:' + #searchTerm")
     public List<DoctorDTO> searchDoctors(String searchTerm) {
         return doctorRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(searchTerm, searchTerm)
                 .stream()
@@ -122,6 +150,8 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'spec:' + #specialization")
     public List<DoctorDTO> getDoctorsBySpecialization(String specialization) {
         Specialization spec = specializationRepository.findByName(specialization)
                 .orElseThrow(() -> new RuntimeException("Specialization not found: " + specialization));
@@ -131,6 +161,8 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'dept:' + #department")
     public List<DoctorDTO> getDoctorsByDepartment(String department) {
         Department dept = departmentRepository.findByName(department)
                 .orElseThrow(() -> new RuntimeException("Department not found: " + department));

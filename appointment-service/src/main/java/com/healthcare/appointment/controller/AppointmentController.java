@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,16 @@ public class AppointmentController {
     @GetMapping
     public ResponseEntity<List<AppointmentDTO>> getAllAppointments() {
         return ResponseEntity.ok(appointmentService.getAllAppointments());
+    }
+
+    @Operation(summary = "Get appointments (paged)", description = "Retrieves a paginated list of appointments")
+    @GetMapping("/paged")
+    public ResponseEntity<Page<AppointmentDTO>> getAppointmentsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsPaged(page, size, sortBy, direction));
     }
     
     @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID")

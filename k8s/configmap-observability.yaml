@@ -6,7 +6,6 @@ metadata:
   labels:
     app: observability
 data:
-  # OpenTelemetry Configuration
   OTEL_SERVICE_NAME: "healthcare-microservices"
   OTEL_RESOURCE_ATTRIBUTES: "service.name=healthcare-microservices,service.version=1.0.0,deployment.environment=production"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
@@ -18,11 +17,9 @@ data:
   OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
   OTEL_TRACES_SAMPLER_ARG: "0.1"
   
-  # Micrometer/Prometheus
   MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus,metrics"
   
-  # Logging
   LOGGING_LEVEL_ROOT: "INFO"
   LOGGING_LEVEL_COM_HEALTHCARE: "DEBUG"
   LOGGING_PATTERN_CONSOLE: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

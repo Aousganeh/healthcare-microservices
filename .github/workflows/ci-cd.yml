@@ -23,7 +23,6 @@ env:
   GITHUB_OWNER: ${{ github.repository_owner }}
 
 jobs:
-  # Build and Test  
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
@@ -82,7 +81,6 @@ jobs:
           path: ${{ matrix.service }}/build/test-results/
           retention-days: 30
 
-  # Build Docker Images
   build-docker-images:
     name: Build Docker Images
     runs-on: ubuntu-latest
@@ -148,7 +146,6 @@ jobs:
             BUILDKIT_INLINE_CACHE=1
             JAR_PATH=jars
 
-  # Build Frontend
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
@@ -209,7 +206,6 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
-  # Dependency Check
   dependency-check:
     name: Dependency Vulnerability Check
     runs-on: ubuntu-latest

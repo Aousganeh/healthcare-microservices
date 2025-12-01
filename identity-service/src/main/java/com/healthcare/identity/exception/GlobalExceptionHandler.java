@@ -112,7 +112,6 @@ public class GlobalExceptionHandler {
         String rootCause = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
         String exceptionClass = ex.getClass().getSimpleName();
         
-        // Include root cause information
         if (rootCause != null) {
             detailedMessage = "Database error: " + rootCause;
             fields.put("rootCause", rootCause);
@@ -122,13 +121,11 @@ public class GlobalExceptionHandler {
         fields.put("exceptionType", exceptionClass);
         fields.put("exceptionMessage", ex.getMessage() != null ? ex.getMessage() : "No message");
         
-        // Include cause information if available
         if (ex.getCause() != null) {
             fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
                       (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
         }
         
-        // Log full stack trace for debugging
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         ex.printStackTrace(pw);
@@ -177,13 +174,11 @@ public class GlobalExceptionHandler {
         fields.put("error", message);
         fields.put("exceptionType", ex.getClass().getSimpleName());
         
-        // Include cause if available
         if (ex.getCause() != null) {
             fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
                       (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
         }
         
-        // Log full stack trace for debugging
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         ex.printStackTrace(pw);
@@ -204,13 +199,11 @@ public class GlobalExceptionHandler {
         fields.put("exceptionType", exceptionClass);
         fields.put("exceptionMessage", message);
         
-        // Include cause if available
         if (ex.getCause() != null) {
             fields.put("cause", ex.getCause().getClass().getSimpleName() + ": " + 
                       (ex.getCause().getMessage() != null ? ex.getCause().getMessage() : "No message"));
         }
         
-        // Log full stack trace for debugging
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         ex.printStackTrace(pw);

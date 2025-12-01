@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,16 @@ public class PatientController {
     @GetMapping
     public ResponseEntity<List<PatientDTO>> getAllPatients() {
         return ResponseEntity.ok(patientService.getAllPatients());
+    }
+
+    @Operation(summary = "Get patients (paged)", description = "Retrieves a paginated list of patients")
+    @GetMapping("/paged")
+    public ResponseEntity<Page<PatientDTO>> getPatientsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return ResponseEntity.ok(patientService.getPatientsPaged(page, size, sortBy, direction));
     }
     
     @Operation(summary = "Get patient by ID", description = "Retrieves a specific patient by their ID")

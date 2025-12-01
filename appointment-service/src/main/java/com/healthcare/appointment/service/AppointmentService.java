@@ -10,6 +10,10 @@ import com.healthcare.appointment.feign.DoctorServiceClient;
 import com.healthcare.appointment.feign.PatientServiceClient;
 import com.healthcare.appointment.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +24,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,12 +37,23 @@ public class AppointmentService {
     private final PatientServiceClient patientServiceClient;
     private final DoctorServiceClient doctorServiceClient;
     
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAllAppointments() {
         return appointmentRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public Page<AppointmentDTO> getAppointmentsPaged(int page, int size, String sortBy, String direction) {
+        Sort sort = "desc".equalsIgnoreCase(direction)
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return appointmentRepository.findAll(pageable).map(this::toDTO);
+    }
     
+    @Transactional(readOnly = true)
     public AppointmentDTO getAppointmentById(Integer id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
@@ -79,6 +95,7 @@ public class AppointmentService {
         appointmentRepository.deleteById(id);
     }
     
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByPatientId(Integer patientId) {
         return appointmentRepository.findByPatientId(patientId)
                 .stream()
@@ -86,6 +103,7 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByDoctorId(Integer doctorId) {
         return appointmentRepository.findByDoctorId(doctorId)
                 .stream()
@@ -93,6 +111,7 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByStatus(String status) {
         return appointmentRepository.findByStatus(status)
                 .stream()
@@ -100,6 +119,7 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
     public AppointmentDetailDTO getAppointmentDetailById(Integer id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with id: " + id));
@@ -135,9 +155,13 @@ public class AppointmentService {
         return detailDTO;
     }
     
+    @Transactional(readOnly = true)
     public List<AppointmentDetailDTO> getAppointmentDetailsByDoctorId(Integer doctorId) {
-        return appointmentRepository.findByDoctorId(doctorId)
-                .stream()
+        List<Appointment> appointments = appointmentRepository.findByDoctorId(doctorId);
+
+        Map<Integer, Map<String, Object>> patientCache = new HashMap<>();
+
+        return appointments.stream()
                 .map(appointment -> {
                     AppointmentDetailDTO detailDTO = new AppointmentDetailDTO();
                     detailDTO.setId(appointment.getId());
@@ -148,24 +172,38 @@ public class AppointmentService {
                     detailDTO.setStatus(appointment.getStatus());
                     detailDTO.setNotes(appointment.getNotes());
                     detailDTO.setReason(appointment.getReason());
-                    
-                    try {
-                        Map<String, Object> patient = patientServiceClient.getPatientById(appointment.getPatientId());
-                        detailDTO.setPatientName(patient.get("name") + " " + patient.get("surname"));
-                        detailDTO.setPatientEmail((String) patient.get("email"));
-                    } catch (Exception e) {
+
+                    Integer patientId = appointment.getPatientId();
+                    if (patientId != null) {
+                        Map<String, Object> patient = patientCache.computeIfAbsent(patientId, id -> {
+                            try {
+                                return patientServiceClient.getPatientById(id);
+                            } catch (Exception ignored) {
+                                return null;
+                            }
+                        });
+
+                        if (patient != null) {
+                            detailDTO.setPatientName(patient.get("name") + " " + patient.get("surname"));
+                            detailDTO.setPatientEmail((String) patient.get("email"));
+                        } else {
+                            detailDTO.setPatientName("Patient not found");
+                            detailDTO.setPatientEmail("N/A");
+                        }
+                    } else {
                         detailDTO.setPatientName("Patient not found");
                         detailDTO.setPatientEmail("N/A");
                     }
-                    
+
                     detailDTO.setDoctorName("Current Doctor");
                     detailDTO.setDoctorSpecialization("N/A");
-                    
+
                     return detailDTO;
                 })
                 .collect(Collectors.toList());
     }
     
+    @Transactional(readOnly = true)
     public List<AppointmentDetailDTO> getAppointmentDetailsByPatientId(Integer patientId) {
         Map<String, Object> patientDetails = null;
         try {
@@ -257,76 +295,37 @@ public class AppointmentService {
         return toDTO(appointment);
     }
     
+    @Transactional(readOnly = true)
     public List<TimeSlotDTO> getAvailableTimeSlots(Integer doctorId, LocalDate date, Integer excludeAppointmentId) {
         Map<String, Object> doctor = doctorServiceClient.getDoctorById(doctorId);
         
-        LocalTime startTime = LocalTime.of(9, 0); // 9:00 AM
-        LocalTime endTime = LocalTime.of(17, 0); // 5:00 PM
+        LocalTime startTime = LocalTime.of(9, 0);
+        LocalTime endTime = LocalTime.of(17, 0);
         
         try {
-            if (doctor.get("workingHoursStart") != null) {
-                Object startObj = doctor.get("workingHoursStart");
-                if (startObj instanceof String) {
-                    startTime = LocalTime.parse((String) startObj);
-                } else if (startObj instanceof Map) {
-                    Map<String, Object> timeMap = (Map<String, Object>) startObj;
-                    Integer hour = (Integer) timeMap.get("hour");
-                    Integer minute = (Integer) timeMap.get("minute");
-                    if (hour != null && minute != null) {
-                        startTime = LocalTime.of(hour, minute);
-                    }
-                }
-            }
-            if (doctor.get("workingHoursEnd") != null) {
-                Object endObj = doctor.get("workingHoursEnd");
-                if (endObj instanceof String) {
-                    endTime = LocalTime.parse((String) endObj);
-                } else if (endObj instanceof Map) {
-                    Map<String, Object> timeMap = (Map<String, Object>) endObj;
-                    Integer hour = (Integer) timeMap.get("hour");
-                    Integer minute = (Integer) timeMap.get("minute");
-                    if (hour != null && minute != null) {
-                        endTime = LocalTime.of(hour, minute);
-                    }
-                }
-            }
-        } catch (Exception e) {
+            startTime = resolveTime(doctor.get("workingHoursStart"), startTime);
+            endTime = resolveTime(doctor.get("workingHoursEnd"), endTime);
+        } catch (Exception ignored) {
         }
         
         String workingDays = (String) doctor.get("workingDays");
-        if (workingDays != null && !workingDays.isEmpty()) {
-            DayOfWeek dayOfWeek = date.getDayOfWeek();
-            String dayName = dayOfWeek.name();
-            
-            List<String> days = new ArrayList<>();
-            String[] parts = workingDays.split(",");
-            for (String part : parts) {
-                String trimmed = part.trim().toUpperCase();
-                if (trimmed.equals("MON-FRI") || trimmed.equals("MONDAY-FRIDAY")) {
-                    days.addAll(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"));
-                } else {
-                    days.add(trimmed);
-                }
-            }
-            
-            if (!days.contains(dayName)) {
-                return new ArrayList<>(); // Doctor doesn't work on this day
-            }
+        if (!isDoctorWorkingOnDate(workingDays, date)) {
+            return new ArrayList<>();
         }
         
-        List<Appointment> existingAppointments = appointmentRepository.findByDoctorId(doctorId).stream()
-                .filter(apt -> {
-                    LocalDate aptDate = apt.getAppointmentDate().toLocalDate();
-                    return aptDate.equals(date) && 
-                           !apt.getStatus().equals(AppointmentStatus.CANCELLED) &&
-                           (excludeAppointmentId == null || !apt.getId().equals(excludeAppointmentId));
-                })
+        LocalDateTime dayStart = LocalDateTime.of(date, startTime);
+        LocalDateTime dayEnd = LocalDateTime.of(date, endTime);
+
+        List<Appointment> existingAppointments = appointmentRepository
+                .findByDoctorIdAndDateRange(doctorId, dayStart, dayEnd)
+                .stream()
+                .filter(apt -> !AppointmentStatus.CANCELLED.equals(apt.getStatus())
+                        && (excludeAppointmentId == null || !apt.getId().equals(excludeAppointmentId)))
                 .collect(Collectors.toList());
         
         List<TimeSlotDTO> slots = new ArrayList<>();
-        LocalDateTime slotStart = LocalDateTime.of(date, startTime);
+        LocalDateTime slotStart = dayStart;
         LocalDateTime slotEnd = slotStart.plusMinutes(30);
-        LocalDateTime dayEnd = LocalDateTime.of(date, endTime);
         
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         
@@ -359,6 +358,47 @@ public class AppointmentService {
         }
         
         return slots;
+    }
+
+    @SuppressWarnings("unchecked")
+    private LocalTime resolveTime(Object raw, LocalTime defaultTime) {
+        if (raw == null) {
+            return defaultTime;
+        }
+        if (raw instanceof String) {
+            return LocalTime.parse((String) raw);
+        }
+        if (raw instanceof Map) {
+            Map<String, Object> timeMap = (Map<String, Object>) raw;
+            Integer hour = (Integer) timeMap.get("hour");
+            Integer minute = (Integer) timeMap.get("minute");
+            if (hour != null && minute != null) {
+                return LocalTime.of(hour, minute);
+            }
+        }
+        return defaultTime;
+    }
+
+    private boolean isDoctorWorkingOnDate(String workingDays, LocalDate date) {
+        if (workingDays == null || workingDays.isEmpty()) {
+            return true;
+        }
+
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        String dayName = dayOfWeek.name();
+
+        List<String> days = new ArrayList<>();
+        String[] parts = workingDays.split(",");
+        for (String part : parts) {
+            String trimmed = part.trim().toUpperCase();
+            if (trimmed.equals("MON-FRI") || trimmed.equals("MONDAY-FRIDAY")) {
+                days.addAll(Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"));
+                continue;
+            }
+            days.add(trimmed);
+        }
+
+        return days.contains(dayName);
     }
     
     private AppointmentDTO toDTO(Appointment appointment) {

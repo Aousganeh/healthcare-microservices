@@ -1,14 +1,12 @@
 version: '3.8'
 
 services:
-  # Service Discovery
   service-discovery:
     build:
       context: .
       dockerfile: service-discovery/Dockerfile
     container_name: healthcare-service-discovery
     restart: unless-stopped
-    # Eureka UI port (optional - remove if not needed for debugging)
     ports:
       - "8761:8761"
     environment:
@@ -30,7 +28,6 @@ services:
           memory: 256M
           cpus: '0.25'
 
-  # API Gateway
   api-gateway:
     build:
       context: .
@@ -62,14 +59,12 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Patient Service
   patient-service:
     build:
       context: .
       dockerfile: patient-service/Dockerfile
     container_name: healthcare-patient-service
     restart: unless-stopped
-    # No ports exposed - only accessible internally via API Gateway
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patient:5432/healthcare_patient
@@ -98,7 +93,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Doctor Service
   doctor-service:
     build:
       context: .
@@ -133,7 +127,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Appointment Service
   appointment-service:
     build:
       context: .
@@ -168,7 +161,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Billing Service
   billing-service:
     build:
       context: .
@@ -203,7 +195,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Room Service
   room-service:
     build:
       context: .
@@ -238,7 +229,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Equipment Service
   equipment-service:
     build:
       context: .
@@ -273,7 +263,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Identity Service
   identity-service:
     build:
       context: .
@@ -310,7 +299,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Notification Service
   notification-service:
     build:
       context: .
@@ -340,7 +328,6 @@ services:
           memory: 512M
           cpus: '0.5'
 
-  # Config Server
   config-server:
     build:
       context: .
@@ -370,7 +357,6 @@ services:
           memory: 256M
           cpus: '0.25'
 
-  # Frontend
   frontend:
     build:
       context: .
@@ -396,7 +382,6 @@ services:
           memory: 128M
           cpus: '0.25'
 
-  # PostgreSQL - Patient
   postgres-patient:
     image: postgres:16-alpine
     container_name: healthcare-postgres-patient
@@ -445,7 +430,6 @@ services:
       - "-c"
       - "max_wal_size=4GB"
 
-  # Redis for caching
   redis:
     image: redis:7-alpine
     container_name: healthcare-redis
@@ -480,7 +464,6 @@ services:
           memory: 128M
           cpus: '0.1'
 
-  # PostgreSQL - Doctor
   postgres-doctor:
     image: postgres:16-alpine
     container_name: healthcare-postgres-doctor
@@ -501,7 +484,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Appointment
   postgres-appointment:
     image: postgres:16-alpine
     container_name: healthcare-postgres-appointment
@@ -522,7 +504,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Billing
   postgres-billing:
     image: postgres:16-alpine
     container_name: healthcare-postgres-billing
@@ -543,7 +524,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Room
   postgres-room:
     image: postgres:16-alpine
     container_name: healthcare-postgres-room
@@ -564,7 +544,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Equipment
   postgres-equipment:
     image: postgres:16-alpine
     container_name: healthcare-postgres-equipment
@@ -585,7 +564,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Identity
   postgres-identity:
     image: postgres:16-alpine
     container_name: healthcare-postgres-identity
