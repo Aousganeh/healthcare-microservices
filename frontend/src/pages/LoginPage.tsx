@@ -24,15 +24,9 @@ export default function LoginPage() {
 
     try {
       await login(username, password);
-      toast.success("Welcome back!", {
-        description: "You have successfully logged in.",
-      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Login failed. Please try again.";
       setError(errorMessage);
-      toast.error("Login failed", {
-        description: errorMessage,
-      });
     } finally {
       setIsLoading(false);
     }

@@ -45,8 +45,6 @@ spring:
         cache:
           use_second_level_cache: false
           use_query_cache: false
-        connection:
-          provider_disables_autocommit: true
 
 jwt:
   secret: mySecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLongForHealthcareSystem

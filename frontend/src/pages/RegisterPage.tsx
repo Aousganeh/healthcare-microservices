@@ -51,15 +51,9 @@ export default function RegisterPage() {
         formData.firstName || undefined,
         formData.lastName || undefined
       );
-      toast.success("Account created!", {
-        description: "Welcome to HealthCare+. You can now book appointments.",
-      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
       setError(errorMessage);
-      toast.error("Registration failed", {
-        description: errorMessage,
-      });
     } finally {
       setIsLoading(false);
     }
