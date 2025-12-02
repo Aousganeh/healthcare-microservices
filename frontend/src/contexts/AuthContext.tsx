@@ -57,8 +57,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Login failed");
+        const raw = await response.text();
+        let message = "Login failed. Please try again.";
+
+        // Prefer a clean, user-friendly message instead of raw JSON
+        try {
+          const data = raw ? JSON.parse(raw) : null;
+          if (data && typeof data === "object") {
+            message =
+              data.message ||
+              data.error ||
+              (data.code === "DATABASE_ERROR" || data.status >= 500
+                ? "Service is temporarily unavailable. Please try again in a few minutes."
+                : message);
+          }
+        } catch {
+          const lower = raw.toLowerCase();
+          const looksLikeHtml = lower.includes("<html") || lower.includes("<!doctype");
+
+          if (
+            response.status === 502 ||
+            response.status === 503 ||
+            lower.includes("service unavailable") ||
+            lower.includes("bad gateway") ||
+            looksLikeHtml
+          ) {
+            message = "Service is temporarily unavailable. Please try again in a few minutes.";
+          } else if (raw && !raw.startsWith("{")) {
+            // If it's a plain string from backend, use it
+            message = raw;
+          }
+        }
+
+        throw new Error(message);
       }
 
       const data = await response.json();
@@ -102,8 +133,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Registration failed");
+        const raw = await response.text();
+        let message = "Registration failed. Please try again.";
+
+        try {
+          const data = raw ? JSON.parse(raw) : null;
+          if (data && typeof data === "object") {
+            message =
+              data.message ||
+              data.error ||
+              (data.code === "DATABASE_ERROR" || data.status >= 500
+                ? "Service is temporarily unavailable. Please try again in a few minutes."
+                : message);
+          }
+        } catch {
+          const lower = raw.toLowerCase();
+          const looksLikeHtml = lower.includes("<html") || lower.includes("<!doctype");
+
+          if (
+            response.status === 502 ||
+            response.status === 503 ||
+            lower.includes("service unavailable") ||
+            lower.includes("bad gateway") ||
+            looksLikeHtml
+          ) {
+            message = "Service is temporarily unavailable. Please try again in a few minutes.";
+          } else if (raw && !raw.startsWith("{")) {
+            message = raw;
+          }
+        }
+
+        throw new Error(message);
       }
 
       const data = await response.json();
