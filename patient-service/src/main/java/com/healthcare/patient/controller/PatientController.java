@@ -39,8 +39,10 @@ public class PatientController {
     
     @Operation(summary = "Get patient by ID", description = "Retrieves a specific patient by their ID")
     @GetMapping("/{id}")
-    public ResponseEntity<PatientDTO> getPatientById(@PathVariable Integer id) {
-        return ResponseEntity.ok(patientService.getPatientById(id));
+    public ResponseEntity<PatientDTO> getPatientById(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        return ResponseEntity.ok(patientService.getPatientById(id, includeInactive));
     }
     
     @Operation(summary = "Create patient", description = "Creates a new patient")
@@ -63,6 +65,15 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
     
+    @Operation(summary = "Update patient status", description = "Enables or disables a patient profile")
+    @PatchMapping("/email/{email}/status")
+    public ResponseEntity<Void> updatePatientStatus(
+            @PathVariable String email,
+            @RequestParam boolean active) {
+        patientService.updatePatientStatusByEmail(email, active);
+        return ResponseEntity.noContent().build();
+    }
+    
     @Operation(summary = "Search patients", description = "Searches patients by name or surname")
     @GetMapping("/search")
     public ResponseEntity<List<PatientDTO>> searchPatients(@RequestParam String q) {
@@ -77,8 +88,10 @@ public class PatientController {
     
     @Operation(summary = "Get patient by email", description = "Retrieves a patient by their email address")
     @GetMapping("/email/{email}")
-    public ResponseEntity<PatientDTO> getPatientByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(patientService.getPatientByEmail(email));
+    public ResponseEntity<PatientDTO> getPatientByEmail(
+            @PathVariable String email,
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        return ResponseEntity.ok(patientService.getPatientByEmail(email, includeInactive));
     }
     
     @Operation(summary = "Get patient by serial number", description = "Retrieves a patient by their serial number (fincode)")

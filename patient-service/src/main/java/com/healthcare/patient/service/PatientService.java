@@ -25,7 +25,7 @@ public class PatientService {
     
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients() {
-        return patientRepository.findAll().stream()
+        return patientRepository.findByActiveTrue().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -36,14 +36,22 @@ public class PatientService {
                 ? Sort.by(sortBy).descending()
                 : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return patientRepository.findAll(pageable).map(this::toDTO);
+        return patientRepository.findByActiveTrue(pageable).map(this::toDTO);
     }
     
     @Transactional(readOnly = true)
-    @Cacheable(key = "#id")
     public PatientDTO getPatientById(Integer id) {
+        return getPatientById(id, false);
+    }
+    
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'id:' + #id + ':includeInactive:' + #includeInactive")
+    public PatientDTO getPatientById(Integer id, boolean includeInactive) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
+        if (!includeInactive && Boolean.FALSE.equals(patient.getActive())) {
+            throw new RuntimeException("Patient not found with id: " + id);
+        }
         return toDTO(patient);
     }
     
@@ -81,10 +89,10 @@ public class PatientService {
     
     @CacheEvict(allEntries = true)
     public void deletePatient(Integer id) {
-        if (!patientRepository.existsById(id)) {
-            throw new RuntimeException("Patient not found with id: " + id);
-        }
-        patientRepository.deleteById(id);
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Patient not found with id: " + id));
+        patient.setActive(false);
+        patientRepository.save(patient);
     }
     
     @Transactional(readOnly = true)
@@ -95,6 +103,7 @@ public class PatientService {
         }
         return patientRepository.searchPatients(searchTerm.trim())
                 .stream()
+                .filter(Patient::getActive)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -104,15 +113,26 @@ public class PatientService {
     public List<PatientDTO> getPatientsByRoomId(Integer roomId) {
         return patientRepository.findByRoomId(roomId)
                 .stream()
+                .filter(Patient::getActive)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
-    @Cacheable(key = "'email:' + #email")
     public PatientDTO getPatientByEmail(String email) {
-        Patient patient = patientRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Patient not found with email: " + email));
+        return getPatientByEmail(email, false);
+    }
+    
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'email:' + #email + ':includeInactive:' + #includeInactive")
+    public PatientDTO getPatientByEmail(String email, boolean includeInactive) {
+        Patient patient = includeInactive
+                ? patientRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Patient not found with email: " + email))
+                : patientRepository.findByEmailAndActiveTrue(email)
+                    .orElseThrow(() -> new RuntimeException("Patient not found with email: " + email));
+        if (!includeInactive && Boolean.FALSE.equals(patient.getActive())) {
+            throw new RuntimeException("Patient not found with email: " + email);
+        }
         return toDTO(patient);
     }
     
@@ -121,7 +141,18 @@ public class PatientService {
     public PatientDTO getPatientBySerialNumber(String serialNumber) {
         Patient patient = patientRepository.findBySerialNumber(serialNumber)
                 .orElseThrow(() -> new RuntimeException("Patient not found with serial number: " + serialNumber));
+        if (Boolean.FALSE.equals(patient.getActive())) {
+            throw new RuntimeException("Patient not found with serial number: " + serialNumber);
+        }
         return toDTO(patient);
+    }
+    
+    @CacheEvict(allEntries = true)
+    public void updatePatientStatusByEmail(String email, boolean active) {
+        Patient patient = patientRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found with email: " + email));
+        patient.setActive(active);
+        patientRepository.save(patient);
     }
     
     private PatientDTO toDTO(Patient patient) {
@@ -138,6 +169,7 @@ public class PatientService {
         dto.setCurrentAddress(patient.getCurrentAddress());
         dto.setBloodGroup(patient.getBloodGroup());
         dto.setRoomId(patient.getRoomId());
+        dto.setActive(patient.getActive());
         return dto;
     }
     
@@ -154,6 +186,7 @@ public class PatientService {
         patient.setCurrentAddress(dto.getCurrentAddress());
         patient.setBloodGroup(dto.getBloodGroup());
         patient.setRoomId(dto.getRoomId());
+        patient.setActive(dto.getActive() != null ? dto.getActive() : Boolean.TRUE);
         return patient;
     }
 }

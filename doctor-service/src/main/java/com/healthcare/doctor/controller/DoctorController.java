@@ -39,14 +39,18 @@ public class DoctorController {
     
     @Operation(summary = "Get doctor by ID", description = "Retrieves a specific doctor by their ID")
     @GetMapping("/{id}")
-    public ResponseEntity<DoctorDTO> getDoctorById(@PathVariable Integer id) {
-        return ResponseEntity.ok(doctorService.getDoctorById(id));
+    public ResponseEntity<DoctorDTO> getDoctorById(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        return ResponseEntity.ok(doctorService.getDoctorById(id, includeInactive));
     }
     
     @Operation(summary = "Get doctor by email", description = "Retrieves a specific doctor by their email")
     @GetMapping("/email/{email}")
-    public ResponseEntity<DoctorDTO> getDoctorByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(doctorService.getDoctorByEmail(email));
+    public ResponseEntity<DoctorDTO> getDoctorByEmail(
+            @PathVariable String email,
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        return ResponseEntity.ok(doctorService.getDoctorByEmail(email, includeInactive));
     }
     
     @Operation(summary = "Create doctor", description = "Creates a new doctor")
@@ -66,6 +70,15 @@ public class DoctorController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDoctor(@PathVariable Integer id) {
         doctorService.deleteDoctor(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @Operation(summary = "Update doctor status", description = "Enables or disables a doctor profile")
+    @PatchMapping("/email/{email}/status")
+    public ResponseEntity<Void> updateDoctorStatus(
+            @PathVariable String email,
+            @RequestParam boolean active) {
+        doctorService.updateDoctorStatusByEmail(email, active);
         return ResponseEntity.noContent().build();
     }
     

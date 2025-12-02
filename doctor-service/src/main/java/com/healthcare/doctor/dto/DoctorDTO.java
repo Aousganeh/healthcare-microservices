@@ -58,5 +58,7 @@ public class DoctorDTO {
     private String workingDays;
     
     private String photoUrl;
+
+    private Boolean active;
 }
 

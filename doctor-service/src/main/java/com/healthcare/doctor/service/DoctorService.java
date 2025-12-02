@@ -33,7 +33,7 @@ public class DoctorService {
     @Transactional(readOnly = true)
     @Cacheable(key = "'all'")
     public List<DoctorDTO> getAllDoctors() {
-        return doctorRepository.findAll().stream()
+        return doctorRepository.findByActiveTrue().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -44,22 +44,40 @@ public class DoctorService {
                 ? Sort.by(sortBy).descending()
                 : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        return doctorRepository.findAll(pageable).map(this::toDTO);
+        return doctorRepository.findByActiveTrue(pageable).map(this::toDTO);
     }
     
     @Transactional(readOnly = true)
-    @Cacheable(key = "#id")
     public DoctorDTO getDoctorById(Integer id) {
+        return getDoctorById(id, false);
+    }
+    
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'id:' + #id + ':includeInactive:' + #includeInactive")
+    public DoctorDTO getDoctorById(Integer id, boolean includeInactive) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
+        if (!includeInactive && Boolean.FALSE.equals(doctor.getActive())) {
+            throw new RuntimeException("Doctor not found with id: " + id);
+        }
         return toDTO(doctor);
     }
     
     @Transactional(readOnly = true)
-    @Cacheable(key = "'email:' + #email")
     public DoctorDTO getDoctorByEmail(String email) {
-        Doctor doctor = doctorRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
+        return getDoctorByEmail(email, false);
+    }
+    
+    @Transactional(readOnly = true)
+    @Cacheable(key = "'email:' + #email + ':includeInactive:' + #includeInactive")
+    public DoctorDTO getDoctorByEmail(String email, boolean includeInactive) {
+        Doctor doctor = includeInactive
+                ? doctorRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email))
+                : doctorRepository.findByEmailAndActiveTrue(email)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
+        if (!includeInactive && Boolean.FALSE.equals(doctor.getActive())) {
+            throw new RuntimeException("Doctor not found with email: " + email);
+        }
         return toDTO(doctor);
     }
     
@@ -135,16 +153,24 @@ public class DoctorService {
     
     @CacheEvict(allEntries = true)
     public void deleteDoctor(Integer id) {
-        if (!doctorRepository.existsById(id)) {
-            throw new RuntimeException("Doctor not found with id: " + id);
-        }
-        doctorRepository.deleteById(id);
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
+        doctor.setActive(false);
+        doctorRepository.save(doctor);
+    }
+    
+    @CacheEvict(allEntries = true)
+    public void updateDoctorStatusByEmail(String email, boolean active) {
+        Doctor doctor = doctorRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with email: " + email));
+        doctor.setActive(active);
+        doctorRepository.save(doctor);
     }
     
     @Transactional(readOnly = true)
     @Cacheable(key = "'search:' + #searchTerm")
     public List<DoctorDTO> searchDoctors(String searchTerm) {
-        return doctorRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(searchTerm, searchTerm)
+        return doctorRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseAndActiveTrue(searchTerm, searchTerm)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -155,7 +181,7 @@ public class DoctorService {
     public List<DoctorDTO> getDoctorsBySpecialization(String specialization) {
         Specialization spec = specializationRepository.findByName(specialization)
                 .orElseThrow(() -> new RuntimeException("Specialization not found: " + specialization));
-        return doctorRepository.findBySpecialization(spec)
+        return doctorRepository.findBySpecializationAndActiveTrue(spec)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -166,7 +192,7 @@ public class DoctorService {
     public List<DoctorDTO> getDoctorsByDepartment(String department) {
         Department dept = departmentRepository.findByName(department)
                 .orElseThrow(() -> new RuntimeException("Department not found: " + department));
-        return doctorRepository.findByDepartment(dept)
+        return doctorRepository.findByDepartmentAndActiveTrue(dept)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -197,6 +223,7 @@ public class DoctorService {
         dto.setWorkingHoursEnd(doctor.getWorkingHoursEnd());
         dto.setWorkingDays(doctor.getWorkingDays());
         dto.setPhotoUrl(doctor.getPhotoUrl());
+        dto.setActive(doctor.getActive());
         return dto;
     }
     
@@ -216,6 +243,7 @@ public class DoctorService {
         doctor.setWorkingHoursEnd(dto.getWorkingHoursEnd());
         doctor.setWorkingDays(dto.getWorkingDays());
         doctor.setPhotoUrl(dto.getPhotoUrl());
+        doctor.setActive(dto.getActive() != null ? dto.getActive() : Boolean.TRUE);
         return doctor;
     }
 }

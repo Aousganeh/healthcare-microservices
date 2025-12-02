@@ -64,5 +64,8 @@ public class Doctor extends BaseAuditableEntity {
 
     @Column(name = "photo_url", columnDefinition = "TEXT")
     private String photoUrl;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }
 

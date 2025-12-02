@@ -43,5 +43,7 @@ public class PatientDTO {
     private BloodGroup bloodGroup;
     
     private Integer roomId;
+
+    private Boolean active;
 }
 

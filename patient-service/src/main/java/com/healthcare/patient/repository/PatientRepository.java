@@ -1,6 +1,8 @@
 package com.healthcare.patient.repository;
 
 import com.healthcare.patient.entity.Patient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +15,13 @@ import java.util.Optional;
 public interface PatientRepository extends JpaRepository<Patient, Integer> {
     Optional<Patient> findByEmail(String email);
     
+    Optional<Patient> findByEmailAndActiveTrue(String email);
+    
     Optional<Patient> findBySerialNumber(String serialNumber);
+    
+    List<Patient> findByActiveTrue();
+    
+    Page<Patient> findByActiveTrue(Pageable pageable);
     
     List<Patient> findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCase(String name, String surname);
     

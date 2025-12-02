@@ -57,5 +57,8 @@ public class Patient extends BaseAuditableEntity {
     
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Insurance> insurances = new ArrayList<>();
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }
 

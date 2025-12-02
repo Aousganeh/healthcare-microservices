@@ -58,6 +58,10 @@ public class AuthService {
         user.getRoles().add(patientRole);
 
         user = userRepository.save(user);
+        
+        // Automatically create a basic patient profile on registration
+        createPatientProfileIfNotExists(user);
+        
         return generateAuthResponse(user, null);
     }
 
@@ -88,7 +92,7 @@ public class AuthService {
             
             if (user == null) {
                 try {
-                    Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(loginIdentifier);
+                Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(loginIdentifier, false);
                     String doctorEmail = (String) doctor.get("email");
                     if (doctorEmail != null) {
                         user = userRepository.findByEmail(doctorEmail)
@@ -164,19 +168,13 @@ public class AuthService {
         
         if ("ROLE_DOCTOR".equals(roleName)) {
             createDoctorProfileIfNotExists(user);
+            setPatientProfileActive(user, false);
         } else if ("ROLE_PATIENT".equals(roleName)) {
             createPatientProfileIfNotExists(user);
+            setDoctorProfileActive(user, false);
         } else {
-            try {
-                Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(user.getEmail());
-                if (doctor != null && doctor.get("id") != null) {
-                    Integer doctorId = (doctor.get("id") instanceof Number)
-                            ? ((Number) doctor.get("id")).intValue()
-                            : Integer.valueOf(doctor.get("id").toString());
-                    doctorServiceClient.deleteDoctor(doctorId);
-                }
-            } catch (Exception ignore) {
-            }
+            setDoctorProfileActive(user, false);
+            setPatientProfileActive(user, false);
         }
         
         return user;
@@ -204,17 +202,6 @@ public class AuthService {
             createDoctorProfileIfNotExists(user);
         } else if ("ROLE_PATIENT".equals(roleName)) {
             createPatientProfileIfNotExists(user);
-        } else {
-            try {
-                Map<String, Object> doctor = doctorServiceClient.getDoctorByEmail(user.getEmail());
-                if (doctor != null && doctor.get("id") != null) {
-                    Integer doctorId = (doctor.get("id") instanceof Number)
-                            ? ((Number) doctor.get("id")).intValue()
-                            : Integer.valueOf(doctor.get("id").toString());
-                    doctorServiceClient.deleteDoctor(doctorId);
-                }
-            } catch (Exception ignore) {
-            }
         }
         
         return user;
@@ -222,44 +209,64 @@ public class AuthService {
     
     private void createDoctorProfileIfNotExists(User user) {
         try {
-            doctorServiceClient.getDoctorByEmail(user.getEmail());
-        } catch (Exception e) {
-            Map<String, Object> doctorDTO = new java.util.HashMap<>();
-            doctorDTO.put("name", user.getFirstName() != null ? user.getFirstName() : "");
-            doctorDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
-            doctorDTO.put("email", user.getEmail());
-            doctorDTO.put("licenseNumber", "LIC-" + System.currentTimeMillis());
-            doctorDTO.put("specializationId", 0);
-            doctorDTO.put("dutyStatus", "ON_DUTY");
-            doctorDTO.put("workingHoursStart", "09:00");
-            doctorDTO.put("workingHoursEnd", "17:00");
-            doctorDTO.put("workingDays", "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
-            doctorDTO.put("gender", "MALE");
-            doctorDTO.put("dateOfBirth", "1980-01-01");
-            
-            try {
-                doctorServiceClient.createDoctor(doctorDTO);
-            } catch (Exception ex) {
-                throw new RuntimeException("Failed to create doctor profile: " + ex.getMessage());
-            }
+            doctorServiceClient.getDoctorByEmail(user.getEmail(), true);
+            doctorServiceClient.updateDoctorStatus(user.getEmail(), true);
+            return;
+        } catch (Exception ignored) {
+        }
+        
+        Map<String, Object> doctorDTO = new java.util.HashMap<>();
+        doctorDTO.put("name", user.getFirstName() != null ? user.getFirstName() : "");
+        doctorDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
+        doctorDTO.put("email", user.getEmail());
+        doctorDTO.put("licenseNumber", "LIC-" + System.currentTimeMillis());
+        doctorDTO.put("specializationId", 0);
+        doctorDTO.put("dutyStatus", "ON_DUTY");
+        doctorDTO.put("workingHoursStart", "09:00");
+        doctorDTO.put("workingHoursEnd", "17:00");
+        doctorDTO.put("workingDays", "MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+        doctorDTO.put("gender", "MALE");
+        doctorDTO.put("dateOfBirth", "1980-01-01");
+        
+        try {
+            doctorServiceClient.createDoctor(doctorDTO);
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to create doctor profile: " + ex.getMessage());
         }
     }
 
     private void createPatientProfileIfNotExists(User user) {
         try {
-            patientServiceClient.getPatientByEmail(user.getEmail());
-        } catch (Exception e) {
-            Map<String, Object> patientDTO = new java.util.HashMap<>();
-            patientDTO.put("name", user.getFirstName() != null ? user.getFirstName() : ""); 
-            patientDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
-            patientDTO.put("email", user.getEmail());
-            patientDTO.put("dateOfBirth", "1990-01-01");
-            patientDTO.put("gender", "MALE");
-            try {
-                patientServiceClient.createPatient(patientDTO);
-            } catch (Exception ex) {
-                throw new RuntimeException("Failed to create patient profile: " + ex.getMessage());
-            }
+            patientServiceClient.getPatientByEmail(user.getEmail(), true);
+            patientServiceClient.updatePatientStatus(user.getEmail(), true);
+            return;
+        } catch (Exception ignored) {
+        }
+        
+        Map<String, Object> patientDTO = new java.util.HashMap<>();
+        patientDTO.put("name", user.getFirstName() != null ? user.getFirstName() : ""); 
+        patientDTO.put("surname", user.getLastName() != null ? user.getLastName() : "");
+        patientDTO.put("email", user.getEmail());
+        patientDTO.put("dateOfBirth", "1990-01-01");
+        patientDTO.put("gender", "MALE");
+        try {
+            patientServiceClient.createPatient(patientDTO);
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to create patient profile: " + ex.getMessage());
+        }
+    }
+    
+    private void setDoctorProfileActive(User user, boolean active) {
+        try {
+            doctorServiceClient.updateDoctorStatus(user.getEmail(), active);
+        } catch (Exception ignored) {
+        }
+    }
+    
+    private void setPatientProfileActive(User user, boolean active) {
+        try {
+            patientServiceClient.updatePatientStatus(user.getEmail(), active);
+        } catch (Exception ignored) {
         }
     }
     
