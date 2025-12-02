@@ -85,8 +85,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ApiError> handleDataAccess(DataAccessException ex, HttpServletRequest req) {
         Map<String, String> fields = new HashMap<>();
-        fields.put("database", "Database operation error occurred.");
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "DATABASE_ERROR", "Database operation error occurred.", req, fields);
+        String rootCause = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        String detailedMessage = rootCause != null ? rootCause : "Database operation error occurred.";
+        fields.put("database", detailedMessage);
+        if (rootCause != null) {
+            fields.put("rootCause", rootCause);
+        }
+        // Log the full exception for debugging
+        ex.printStackTrace();
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "DATABASE_ERROR", detailedMessage, req, fields);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

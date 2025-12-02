@@ -40,7 +40,7 @@ else
     START_CONTAINERS="${3:-false}"
 fi
 
-# Services to pull
+# Services to pull from GHCR
 SERVICES=(
     "api-gateway"
     "service-discovery"
@@ -54,6 +54,12 @@ SERVICES=(
     "equipment-service"
     "notification-service"
     "frontend"
+)
+
+# External images to pull from Docker Hub
+EXTERNAL_IMAGES=(
+    "wurstmeister/zookeeper:latest"
+    "wurstmeister/kafka:latest"
 )
 
 echo "🔐 Logging into GitHub Container Registry..."
@@ -131,6 +137,19 @@ pull_image() {
     return 1
 }
 
+# Function to pull external image from Docker Hub
+pull_external_image() {
+    local image=$1
+    
+    if docker pull --platform linux/amd64 "$image" 2>/dev/null; then
+        echo "[$image] ✅ Pulled"
+        return 0
+    else
+        echo "[$image] ⚠️  Could not pull image"
+        return 1
+    fi
+}
+
 # Pull all service images in parallel
 SUCCESS=0
 FAILED=0
@@ -170,6 +189,50 @@ for service in "${SERVICES[@]}"; do
         ((FAILED++))
     fi
 done
+
+# Pull external images (Kafka, Zookeeper) from Docker Hub
+echo ""
+echo "📦 Pulling external images from Docker Hub..."
+echo ""
+
+EXTERNAL_SUCCESS=0
+EXTERNAL_FAILED=0
+EXTERNAL_PIDS=()
+
+for image in "${EXTERNAL_IMAGES[@]}"; do
+    (
+        if pull_external_image "$image"; then
+            echo "$image:SUCCESS" > "/tmp/pull_external_${image//\//_}.result"
+        else
+            echo "$image:FAILED" > "/tmp/pull_external_${image//\//_}.result"
+        fi
+    ) &
+    EXTERNAL_PIDS+=($!)
+done
+
+# Wait for all external image pulls to complete
+for pid in "${EXTERNAL_PIDS[@]}"; do
+    wait "$pid"
+done
+
+# Count external image results
+for image in "${EXTERNAL_IMAGES[@]}"; do
+    result_file="/tmp/pull_external_${image//\//_}.result"
+    if [ -f "$result_file" ]; then
+        if grep -q "SUCCESS" "$result_file"; then
+            ((EXTERNAL_SUCCESS++))
+        else
+            ((EXTERNAL_FAILED++))
+        fi
+        rm -f "$result_file"
+    else
+        ((EXTERNAL_FAILED++))
+    fi
+done
+
+# Update totals
+SUCCESS=$((SUCCESS + EXTERNAL_SUCCESS))
+FAILED=$((FAILED + EXTERNAL_FAILED))
 
 echo ""
 
@@ -214,9 +277,9 @@ if [ "$START_CONTAINERS" = "start" ]; then
     
     # Use docker-compose to start everything (--no-build prevents building, uses images)
     # The override file specifies images, so docker-compose will use them instead of building
-    # Start databases and service-discovery first
-    echo "   Starting databases and service-discovery first..."
-    docker-compose up -d --no-build postgres-patient postgres-doctor postgres-appointment postgres-billing postgres-room postgres-equipment postgres-identity redis service-discovery
+    # Start databases, Kafka, Zookeeper, and service-discovery first
+    echo "   Starting databases, Kafka, Zookeeper, and service-discovery first..."
+    docker-compose up -d --no-build postgres-patient postgres-doctor postgres-appointment postgres-billing postgres-room postgres-equipment postgres-identity redis zookeeper kafka service-discovery
     
     # Wait for service-discovery to be healthy
     echo "   Waiting for service-discovery to be healthy..."
@@ -274,6 +337,8 @@ if [ "$START_CONTAINERS" = "start" ]; then
     echo "   - Eureka UI: http://localhost:8761"
     echo "   - PostgreSQL: localhost:5432"
     echo "   - Redis: localhost:6379"
+    echo "   - Kafka: localhost:9092"
+    echo "   - Zookeeper: localhost:2181"
     echo ""
     echo "💡 Useful commands:"
     echo "   docker-compose logs -f [service-name]  # View logs"
