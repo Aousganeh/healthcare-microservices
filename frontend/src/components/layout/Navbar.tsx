@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun, Menu, X, Activity, LogOut, Bell } from "lucide-react";
 import { NavLink } from "@/components/navigation/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDoctors, getDoctorNotifications, getPatientByEmail, getPatientNotifications } from "@/lib/api";
+import { getDoctors, getDoctorNotifications, getPatientByEmail, getPatientNotifications, markNotificationRead } from "@/lib/api";
 import type { Doctor } from "@/types/api";
 
 export const Navbar = () => {
@@ -13,6 +13,7 @@ export const Navbar = () => {
   const [isDark, setIsDark] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const {
     data: doctors = [],
@@ -165,13 +166,65 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <div className="relative hidden md:block">
-                  <Button variant="ghost" size="icon" aria-label="Notifications">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Notifications"
+                    onClick={() => setIsNotificationsOpen((prev) => !prev)}
+                  >
                     <Bell className="h-5 w-5" />
                   </Button>
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
+                  )}
+                  {isNotificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl bg-background shadow-lg border border-border/60 z-50">
+                      <div className="px-4 py-2 border-b border-border/50 flex items-center justify-between">
+                        <span className="text-sm font-semibold">Notifications</span>
+                        <span className="text-xs text-muted-foreground">
+                          {notifications.length === 0
+                            ? "No notifications"
+                            : `${unreadCount} unread`}
+                        </span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="px-4 py-6 text-sm text-muted-foreground text-center">
+                            You have no notifications yet.
+                          </div>
+                        ) : (
+                          notifications.map((n) => (
+                            <button
+                              key={n.id}
+                              className={`w-full text-left px-4 py-3 text-sm border-b border-border/40 last:border-b-0 hover:bg-muted/60 transition-colors ${
+                                !n.read ? "bg-primary/5 font-medium" : ""
+                              }`}
+                              onClick={async () => {
+                                if (!n.read) {
+                                  try {
+                                    await markNotificationRead(n.id);
+                                  } catch {
+                                    // ignore errors; UI will refresh on next poll
+                                  }
+                                }
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                                  {n.type}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(n.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-foreground/90">{n.message}</p>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
                 <Button
